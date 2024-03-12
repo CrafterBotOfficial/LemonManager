@@ -86,6 +86,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
 
     private async void ChangeApplication()
     {
+        MainWindowViewModel.LoadingStatus = "Changing application";
         MainWindowViewModel.IsLoading = true;
         await MainWindowViewModel.Instance.SelectApplication(true);
         await MainWindowViewModel.Instance.PopulateLemons();

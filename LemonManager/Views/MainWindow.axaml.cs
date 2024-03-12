@@ -21,10 +21,15 @@ namespace LemonManager.Views
         {
             IEnumerable<IStorageItem>? files = e.Data.GetFiles();
             if (files is object)
+            {
+                var viewModel = ((MainWindowViewModel)DataContext);
+                MainWindowViewModel.IsLoading = true;
                 foreach (IStorageItem item in files)
                 {
-                    await ((MainWindowViewModel)DataContext).ApplicationManager.InstallLemon(item.Path.LocalPath);
+                    await viewModel.ApplicationManager.InstallLemon(item.Path.LocalPath);
                 }
+                await viewModel.PopulateLemons();
+            }
         }
     }
 }

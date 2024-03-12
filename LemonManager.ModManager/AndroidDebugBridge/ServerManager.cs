@@ -15,6 +15,7 @@ public static class ServerManager
         Logger.Log("Initializing server manager");
 
         CommandExecuter.ExecutablePath = await GetADBExecutable();
+        Logger.SetStatus("Starting ADB server");
         await CommandExecuter.SendCommandAsync("start-server");
 
         await DeviceManager.DetermineDevice();

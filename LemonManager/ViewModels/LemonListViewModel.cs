@@ -19,6 +19,5 @@ public class LemonListViewModel : ViewModelBase
         Lemons.Clear();
         foreach (var info in await MainWindowViewModel.Instance.ApplicationManager.GetLemons(IsPluginView))
             Lemons.Add(new LemonModel(this, info.Name, $"By {info.Author}\nv{info.Version}", info.RemotePath));
-        ModManager.Logger.Log($"{Lemons.Count} lemons for view");
     }
 }

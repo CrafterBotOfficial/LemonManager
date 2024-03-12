@@ -6,7 +6,8 @@
         mc:Ignorable="d"
         x:Class="LemonManager.Views.PromptWindow" x:DataType="vm:PromptWindowViewModel"
         Title="PromptWindow"
-        Width="250" Height="125">
+        Width="250" Height="125"
+        WindowStartupLocation="CenterOwner">
 
   <StackPanel HorizontalAlignment="Center">
     <TextBlock FontSize="20" Text="{Binding Title}"/>
@@ -16,7 +17,7 @@
 
     <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center"
                 Orientation="Horizontal">
-      <Button Command="{Binding OnCancel}">Cancel</Button>
+      <Button Command="{Binding OnCancel}" IsVisible="{Binding IsCancelable}">Cancel</Button>
       <Button Command="{Binding OnOk}">Confirm</Button>
     </StackPanel>
   </StackPanel>

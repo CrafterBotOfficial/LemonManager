@@ -19,6 +19,12 @@
               <StackPanel>
                 <TextBlock Text="{Binding Name}"/>
                 <TextBlock Text="{Binding LemonInfoText}"/>
+
+                <StackPanel VerticalAlignment="Bottom"
+                            HorizontalAlignment="Right">
+                  <Button Content="{Binding StatusButtonText}" Command="{Binding SetStatusCommand}"/>
+                  <Button Command="{Binding DeleteLemonCommand}">Delete</Button>
+                </StackPanel>
               </StackPanel>
             </Border>
           </DataTemplate>

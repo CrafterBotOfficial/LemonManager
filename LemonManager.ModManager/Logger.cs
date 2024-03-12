@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using LemonManager.ModManager.AndroidDebugBridge;
+using System.Diagnostics;
 using System.IO;
 
 namespace LemonManager.ModManager;
@@ -35,6 +36,7 @@ public static class Logger
     public static void SetStatus(string status)
     {
         Log("[Status] " + status);
+        ServerManager.PromptHandler.SetStatus(status);
     }
 
 

@@ -42,4 +42,9 @@ public class PromptHandler : IPromptHandler
         });
         return taskCompletionSource.Task;
     }
+
+    public void SetStatus(string status)
+    {
+        MainWindowViewModel.LoadingStatus = status;   
+    }
 }

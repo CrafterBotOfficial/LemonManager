@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace LemonManager.ModManager;
@@ -19,8 +20,6 @@ public class ApplicationManager
     public ModdedApplicationModel Info;
 
     public string ApplicationData => string.Format(FilePaths.RemoteApplicationDataPath, Info.Id);
-    public string ModsFolder => ApplicationData + "Mods";
-    public string PluginsFolder => ApplicationData + "Plugins";
 
     private static Assembly melonLoaderAssembly;
 
@@ -76,7 +75,7 @@ public class ApplicationManager
                 Author = (string)entryPointArgs[3].Value,
                 IsPlugin = isPlugin,
                 LocalDLLCachePath = file,
-                RemotePath = ApplicationData + (isPlugin ? "Plugins" : "Mods") + Path.GetFileName(file),
+                RemotePath = ApplicationData + (isPlugin ? "/Plugins/" : "/Mods/") + Path.GetFileName(file),
             };
         }
         catch (Exception ex) { Logger.Error($"Couldn't load Lemon {Path.GetFileNameWithoutExtension(file)} due to {ex}"); }
@@ -85,6 +84,7 @@ public class ApplicationManager
 
     public async Task InstallLemon(string localDLL)
     {
+        Logger.SetStatus("Installing " + Path.GetFileName(localDLL));
         LemonInfo? info = LoadLemon(localDLL);
         if (!info.HasValue) return; // Not a DLL file / Melon
 
@@ -100,7 +100,7 @@ public class ApplicationManager
     public void SetLemonEnabled(string remotePath, bool enabled)
     {
         string newPath = $"{Path.GetDirectoryName(remotePath)}/{Path.GetFileNameWithoutExtension(remotePath)}{(enabled ? ".dll" : FilePaths.DisabledPrefix)}";
-        DeviceManager.SendShellCommand($"mv {remotePath} {newPath}");
+        DeviceManager.SendShellCommand($"mv {remotePath.Replace('\\', '/')} {newPath.Replace('\\', '/')}");
     }
 
     public async Task LoadMelonLoaderAssembly()
