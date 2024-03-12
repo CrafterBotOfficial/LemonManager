@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LemonManager.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LemonManager.Views.GameControlsView" x:DataType="vm:GameControlsViewModel">
+
+  <StackPanel Margin="20">
+    <ItemsRepeater ItemsSource="{Binding Options}">
+      <ItemsRepeater.ItemTemplate>
+        <DataTemplate>
+          <Panel>
+            <Button Content="{Binding Name}"
+                    Command="{Binding OnPressCommand}"/>
+          </Panel>
+        </DataTemplate>
+      </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
+
+    <TextBlock Margin="10"
+               Text="{Binding Info}"/>
+  </StackPanel>
+</UserControl>

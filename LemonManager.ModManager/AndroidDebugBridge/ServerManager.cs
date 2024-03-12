@@ -9,9 +9,8 @@ public static class ServerManager
 {
     public static IPromptHandler PromptHandler;
 
-    public static async Task Initialize(ILogger logger, IPromptHandler promptHandler)
+    public static async Task Initialize(IPromptHandler promptHandler)
     {
-        // Logger.LoggerImplementation = logger;
         PromptHandler = promptHandler;
         Logger.Log("Initializing server manager");
 

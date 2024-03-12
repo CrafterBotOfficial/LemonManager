@@ -9,20 +9,49 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
 
   <ItemGroup>
-    <ProjectReference Include="../LemonManager.ModManager/LemonManager.ModManager.csproj"/>
+    <ProjectReference Include="../LemonManager.ModManager/LemonManager.ModManager.csproj" />
     
     <PackageReference Include="Avalonia" Version="11.0.2" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.2" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.2" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Update="AppSettings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Update="Views\MultiSelectionPromptWindow.axaml.cs">
+      <DependentUpon>MultiSelectionPromptWindow.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\PromptWindow.axaml.cs">
+      <DependentUpon>PromptWindow.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="AppSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>AppSettings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\LemonListView.axaml" />
   </ItemGroup>
 </Project>

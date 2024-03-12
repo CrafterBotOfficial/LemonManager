@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:LemonManager.ViewModels"
+        mc:Ignorable="d"
+        x:Class="LemonManager.Views.PromptWindow" x:DataType="vm:PromptWindowViewModel"
+        Title="PromptWindow"
+        Width="250" Height="125">
+
+  <StackPanel HorizontalAlignment="Center">
+    <TextBlock FontSize="20" Text="{Binding Title}"/>
+    <TextBlock HorizontalAlignment="Left"
+               TextWrapping="WrapWithOverflow"
+               Text="{Binding Message}"/>
+
+    <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Orientation="Horizontal">
+      <Button Command="{Binding OnCancel}">Cancel</Button>
+      <Button Command="{Binding OnOk}">Confirm</Button>
+    </StackPanel>
+  </StackPanel>
+</Window>

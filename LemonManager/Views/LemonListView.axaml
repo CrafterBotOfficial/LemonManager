@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="using:LemonManager.ViewModels"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LemonManager.Views.LemonListView" x:DataType="vm:LemonListViewModel"
+             Width="750" Height="425">
+
+  <Grid Margin="30">
+    <ScrollViewer>
+      <ItemsRepeater ItemsSource="{Binding Lemons}">
+        <ItemsRepeater.ItemTemplate>
+          <DataTemplate>
+            <Border BorderThickness="3"
+                    BorderBrush="Black"
+                    Width="150" Height="150"
+                    Margin="10">
+              <StackPanel>
+                <TextBlock Text="{Binding Name}"/>
+                <TextBlock Text="{Binding LemonInfoText}"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+
+        <ItemsRepeater.Layout>
+          <UniformGridLayout Orientation="Horizontal"
+                             MinItemHeight="150"
+                             MinRowSpacing="10"/>
+        </ItemsRepeater.Layout>
+
+      </ItemsRepeater>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -42,8 +42,16 @@ public static class DeviceManager
         return SendShellCommand($"ls -m {remotePath}").Split('\n').Select(x => x.Insert(0, remotePath + "/")).ToArray();
     }
 
+    public static bool CompareFileHashs(string remoteFile, string localFile)
+    {
+        string remoteHash = RemoteComputeHash(remoteFile);
+        string localHash = LocalComputeHash(localFile);
+        bool equals = remoteHash.Equals(localHash);
+        return equals;
+    }
+
     public static string RemoteComputeHash(string remoteFile) =>
-        SendShellCommand($"sha256sum {remoteFile}");
+       SendShellCommand($"md5sum {remoteFile}").Split(' ', '\n')[0].ToLowerInvariant().Trim();
 
     public static string LocalComputeHash(string path)
     {
@@ -52,9 +60,9 @@ public static class DeviceManager
     }
     public static string LocalComputeHash(Stream stream)
     {
-        using SHA256 sha256 = SHA256.Create();
-        var hash = sha256.ComputeHash(stream);
-        return BitConverter.ToString(hash).Replace("-", "").ToLower();
+        using MD5 md5 = MD5.Create();
+        var hash = md5.ComputeHash(stream);
+        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant().Trim();
     }
 
     #endregion

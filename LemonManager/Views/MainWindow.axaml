@@ -3,12 +3,11 @@
         xmlns:vm="using:LemonManager.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="LemonManager.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="LemonManager"
-        DragDrop.AllowDrop="True">
+        mc:Ignorable="d"
+        x:Class="LemonManager.Views.MainWindow" x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico" Title="LemonManager"
+        DragDrop.AllowDrop="True" CanResize="false"
+        Width="750" Height="525">
 
   <Design.DataContext>
     <!-- This only sets the DataContext for the previewer in an IDE,
@@ -16,6 +15,28 @@
     <vm:MainWindowViewModel/>
   </Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <Panel>
 
+    <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                IsVisible="{Binding ShowLoadingView}">
+      <TextBlock>Loading...</TextBlock>
+      <TextBlock Text="{Binding Status}"/>
+    </StackPanel>
+
+    <StackPanel Margin="20" IsVisible="{Binding !ShowLoadingView}">
+      <TextBlock FontSize="30">LemonManager</TextBlock>
+      <TabControl>
+        <TabItem Header="Mods">
+          <UserControl Content="{Binding ModListView}"/>
+        </TabItem>
+        <TabItem Header="Plugins">
+          <UserControl Content="{Binding PluginListView}"/>
+        </TabItem>
+        <TabItem Header="Game Controls">
+          <UserControl Content="{Binding GameControlsView}"/>
+        </TabItem>
+      </TabControl>
+    </StackPanel>
+  </Panel>
 </Window>

@@ -68,12 +68,15 @@ public class ApplicationManager
             if (!attributes.Any(attribute => attribute.AttributeType.FullName == "MelonLoader.MelonInfoAttribute")) return null;
 
             var entryPointArgs = attributes.Single(x => x.AttributeType.FullName == "MelonLoader.MelonInfoAttribute").ConstructorArguments;
+            bool isPlugin = entryPointArgs[0].Value.GetType().IsSubclassOf(melonLoaderAssembly.GetType("MelonLoader.MelonPlugin"));
             return new() // TODO: Add other contructor variants
             {
                 Name = (string)entryPointArgs[1].Value,
                 Version = (string)entryPointArgs[2].Value,
                 Author = (string)entryPointArgs[3].Value,
-                IsPlugin = entryPointArgs[0].Value.GetType().IsSubclassOf(melonLoaderAssembly.GetType("MelonLoader.MelonPlugin"))
+                IsPlugin = isPlugin,
+                LocalDLLCachePath = file,
+                RemotePath = ApplicationData + (isPlugin ? "Plugins" : "Mods") + Path.GetFileName(file),
             };
         }
         catch (Exception ex) { Logger.Error($"Couldn't load Lemon {Path.GetFileNameWithoutExtension(file)} due to {ex}"); }
@@ -94,6 +97,12 @@ public class ApplicationManager
         DeviceManager.SendShellCommand("rm -f " + remotePath);
     }
 
+    public void SetLemonEnabled(string remotePath, bool enabled)
+    {
+        string newPath = $"{Path.GetDirectoryName(remotePath)}/{Path.GetFileNameWithoutExtension(remotePath)}{(enabled ? ".dll" : FilePaths.DisabledPrefix)}";
+        DeviceManager.SendShellCommand($"mv {remotePath} {newPath}");
+    }
+
     public async Task LoadMelonLoaderAssembly()
     {
         if (melonLoaderAssembly is object) return;
@@ -111,5 +120,8 @@ public class ApplicationManager
         public string Version;
 
         public bool IsPlugin;
+
+        public string LocalDLLCachePath;
+        public string RemotePath;
     }
 }

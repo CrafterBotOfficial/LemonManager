@@ -23,9 +23,16 @@ public static class ApplicationLocator
         {
             string line = lines[i];
             var match = Regex.Match(line, @"package:(.+?)\.apk=(.+)");
-            if (!match.Success) { Logger.Warning("Couldn't parse " + line); continue; }
+            if (!match.Success) 
+            { 
+                Logger.Warning("Couldn't parse " + line);
+                continue;
+            }
 
-            infos.Add(match.Groups[2].Value, new ApplicationInfo(match.Groups[1].Value + ".apk", match.Groups[2].Value));
+            string id = match.Groups[2].Value;
+            if (id.StartsWith("com.oculus")) continue;
+
+            infos.Add(id, new ApplicationInfo(match.Groups[1].Value + ".apk", id));
         }
         Logger.Log($"Found {infos.Count} packages");
         return infos;
@@ -40,9 +47,10 @@ public static class ApplicationLocator
         string localAPK = Path.Combine(localDirectory, "base.apk.zip");
         Stream localAPKReadStream = File.Exists(localAPK) ? File.OpenRead(localAPK) : null;
 
-        if (localAPKReadStream is null || DeviceManager.LocalComputeHash(localAPKReadStream) != DeviceManager.RemoteComputeHash(info.RemoteAPKPath))
+        if (localAPKReadStream is null || !DeviceManager.CompareFileHashs(info.RemoteAPKPath, localAPK))
         {
             Logger.SetStatus("Downloading remote APK");
+            if (File.Exists(localAPK)) File.Delete(localAPK);
             await DeviceManager.Pull(info.RemoteAPKPath, localAPK);
             localAPKReadStream = File.OpenRead(localAPK);
         }

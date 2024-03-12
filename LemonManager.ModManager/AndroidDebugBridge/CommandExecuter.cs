@@ -7,14 +7,24 @@ internal static class CommandExecuter
 {
     public static string ExecutablePath;
 
-    public static string SendCommand(string command, int timeout = 6500)
-    {
-        string result = StartProcessAsync(command).Result;
-        return result;
-    }
+    public static string SendCommand(string command, int timeout = 6500) =>
+        StartProcess(command, timeout);
+     
     public static async Task<string> SendCommandAsync(string command) =>
         await StartProcessAsync(command);
 
+    private static string StartProcess(string args, int timeout)
+    {
+        Process process = Process.Start(GetProcessStartInfo(args));
+        process.EnableRaisingEvents = true;
+
+        string output = string.Empty;
+        process.OutputDataReceived += (sender, args) => output += args.Data + "\n";
+        process.BeginOutputReadLine();
+        if (!process.WaitForExit(timeout)) process.Kill();
+
+        return output.Trim();
+    }
     private static async Task<string> StartProcessAsync(string args)
     {
         Process process = Process.Start(GetProcessStartInfo(args));
