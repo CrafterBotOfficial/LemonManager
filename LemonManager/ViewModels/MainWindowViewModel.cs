@@ -3,6 +3,8 @@ using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using ReactiveUI;
 using System.ComponentModel;
+using Avalonia.Media.Imaging;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -20,6 +22,9 @@ namespace LemonManager.ViewModels
         public GameControlsViewModel GameControlsView { get; } = new GameControlsViewModel();
 
         public ICommand ChangeApplicationCommand { get; set; }
+
+        public bool HasIcon => AppIcon is object;
+        public Bitmap AppIcon { get; set; }
 
         public MainWindowViewModel()
         {
@@ -64,8 +69,18 @@ namespace LemonManager.ViewModels
                 AppSettings.Default.SelectedApplicationId = apps.ElementAt(await PromptHandler.Instance.PromptUser("Select a Application", apps.Select(app => app.Key).ToArray())).Key;
             }
             ApplicationManager = new ApplicationManager(moddedInfo);
+            AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon);
+            this.RaisePropertyChanged(nameof(AppIcon)); 
+            this.RaisePropertyChanged(nameof(HasIcon));
             AppSettings.Default.Save();
         }
+
+        public static Bitmap ByteArrayToBitmap(byte[] byteArray)
+        {
+            using var stream = new MemoryStream(byteArray);
+            return new Bitmap(stream);
+        }
+
 
         #region Loading status
         public bool ShowLoadingView { get; set; } = true;

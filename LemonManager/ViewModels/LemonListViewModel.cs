@@ -1,4 +1,5 @@
-﻿using LemonManager.Models;
+﻿using DynamicData;
+using LemonManager.Models;
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -19,10 +20,10 @@ public class LemonListViewModel : ViewModelBase, INotifyPropertyChanged
 
     public async Task PopulateLemons()
     {
+        var lemons = await MainWindowViewModel.Instance.ApplicationManager.GetLemons(IsPluginView);
         Lemons.Clear();
-        foreach (var info in await MainWindowViewModel.Instance.ApplicationManager.GetLemons(IsPluginView))
+        foreach (var info in lemons)
             Lemons.Add(new LemonModel(this, info.Name, $"By {info.Author}\nv{info.Version}", info.RemotePath));
         this.RaisePropertyChanged(nameof(LemonsExist));
-        MainWindowViewModel.IsLoading = false;
     }
 }

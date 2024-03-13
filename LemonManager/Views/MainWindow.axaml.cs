@@ -23,12 +23,13 @@ namespace LemonManager.Views
             if (files is object)
             {
                 var viewModel = ((MainWindowViewModel)DataContext);
-                MainWindowViewModel.IsLoading = true;
+                // MainWindowViewModel.IsLoading = true;
                 foreach (IStorageItem item in files)
                 {
                     await viewModel.ApplicationManager.InstallLemon(item.Path.LocalPath);
                 }
                 await viewModel.PopulateLemons();
+                MainWindowViewModel.IsLoading = false;
             }
         }
     }

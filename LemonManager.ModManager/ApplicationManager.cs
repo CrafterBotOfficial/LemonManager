@@ -1,9 +1,4 @@
-﻿/*
- The majority of this is untested atm, however it probably all works. 
- TODO: Less repetive path finding
-*/
-
-using LemonManager.ModManager.AndroidDebugBridge;
+﻿using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using System;
 using System.Collections.Generic;
@@ -30,7 +25,7 @@ public class ApplicationManager
 
     public async Task<LemonInfo[]> GetLemons(bool plugins)
     {
-        Logger.SetStatus("Getting Lemons");
+        Logger.Log("Getting Lemons");
         await LoadMelonLoaderAssembly();
 
         string prefix = (plugins ? "Plugins" : "Mods");
@@ -94,12 +89,14 @@ public class ApplicationManager
 
     public void UninstallLemon(string remotePath)
     {
+        Logger.Log("Uninstalling lemon " + remotePath);
         DeviceManager.SendShellCommand("rm -f " + remotePath);
     }
 
     public void SetLemonEnabled(string remotePath, bool enabled)
     {
         string newPath = $"{Path.GetDirectoryName(remotePath)}/{Path.GetFileNameWithoutExtension(remotePath)}{(enabled ? ".dll" : FilePaths.DisabledPrefix)}";
+        Logger.Log($"Moving {remotePath} to {newPath}");
         DeviceManager.SendShellCommand($"mv {remotePath.Replace('\\', '/')} {newPath.Replace('\\', '/')}");
     }
 

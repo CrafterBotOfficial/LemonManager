@@ -25,7 +25,12 @@
     </StackPanel>
 
     <StackPanel Margin="20" IsVisible="{Binding !ShowLoadingView}">
-      <TextBlock FontSize="30">LemonManager</TextBlock>
+      <Panel>
+        <TextBlock FontSize="30">LemonManager</TextBlock>
+        <Image Height="45" Width="45"
+               HorizontalAlignment="Right"
+               Source="{Binding AppIcon}" IsVisible="{Binding HasIcon}"/>
+      </Panel>
       <TabControl>
         <TabItem Header="Mods">
           <UserControl Content="{Binding ModListView}"/>

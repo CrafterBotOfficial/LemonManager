@@ -73,12 +73,14 @@ public static class ApplicationLocator
                 UnityVersion = GetUnityVersion(zipArchive),
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
+                Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
             };
         }
         Logger.Log($"{info.Id} isn't modded");
         return null;
     }
 
+    // TODO: Refactor this, since there may be no data.unity3d and globalgamemanagers
     private static string GetUnityVersion(ZipArchive archive)
     {
         bool dataUnity3dExists = archive.Entries.Any(entry => entry.Name == "data.unity3d");
