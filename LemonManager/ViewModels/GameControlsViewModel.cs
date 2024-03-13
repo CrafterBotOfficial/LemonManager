@@ -27,7 +27,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
     {
         Options.AddRange(new GameControlButtonModel[]
         {
-            new GameControlButtonModel("MelonLog", MelonLog),
+            new GameControlButtonModel("Logcat", Logcat),
             new GameControlButtonModel("Clear LemonCache", ClearLemonCache),
             new GameControlButtonModel("Stop Game", "Start Game", StartStopGame),
             new GameControlButtonModel("Download Game Data", DownloadGameData),
@@ -35,32 +35,15 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         });
     }
 
-    private async void MelonLog()
+    private async void Logcat()
     {
-        string adbDirectory = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools");
-        string melonLogExecutable = Path.Combine(adbDirectory, "MelonLog.exe");
-        if (!File.Exists(melonLogExecutable))
+        string adbPath = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools", "adb.exe");
+        
+        Logger.Log("Starting logcat");
+        Process.Start(new ProcessStartInfo(adbPath)
         {
-            if (!await PromptHandler.Instance.PromptUser("Download MelonLog?", "Are you sure you want to download MelonLog, it is by a third party and may contain malware.", PromptType.Confirmation))
-                return;
-            MainWindowViewModel.IsLoading = true;
-            MainWindowViewModel.LoadingStatus = "Downloading MelonLog";
-
-            string tempPath = Path.Combine(FilePaths.ApplicationDataPath, "MelonLog.zip");
-            using WebClient webClient = new WebClient();
-            await webClient.DownloadFileTaskAsync("https://github.com/Lewko6702/MelonLog/releases/download/1.0.1/MelonLog.zip", tempPath);
-
-            MainWindowViewModel.LoadingStatus = "Extracting MelonLog";
-            ZipFile.ExtractToDirectory(tempPath, adbDirectory);
-            File.Delete(tempPath);
-
-            MainWindowViewModel.IsLoading = false;
-        }
-
-        Logger.Log("Starting MelonLog");
-        Process.Start(new ProcessStartInfo(melonLogExecutable)
-        {
-            WorkingDirectory = adbDirectory,
+            WorkingDirectory = Path.GetDirectoryName(adbPath),
+            Arguments = "logcat -v time MelonLoader:D CRASH:D Mono:D mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D funchook:D Unity:D Binder:D AndroidRuntime:D *:S" // https://github.com/LemonLoader/MelonLoader/wiki/Logging#realtime-logging
         });
     }
 

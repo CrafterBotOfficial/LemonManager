@@ -1,10 +1,12 @@
 ﻿using Iteedee.ApkReader;
 using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -23,8 +25,8 @@ public static class ApplicationLocator
         {
             string line = lines[i];
             var match = Regex.Match(line, @"package:(.+?)\.apk=(.+)");
-            if (!match.Success) 
-            { 
+            if (!match.Success)
+            {
                 Logger.Warning("Couldn't parse " + line);
                 continue;
             }
