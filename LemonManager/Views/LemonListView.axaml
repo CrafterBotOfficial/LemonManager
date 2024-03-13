@@ -8,6 +8,9 @@
              Width="750" Height="425">
 
   <Grid Margin="30">
+    <TextBlock HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               IsVisible="{Binding !LemonsExist}">No melons found, please drag and drop some onto the window.</TextBlock>
     <ScrollViewer>
       <ItemsRepeater ItemsSource="{Binding Lemons}">
         <ItemsRepeater.ItemTemplate>

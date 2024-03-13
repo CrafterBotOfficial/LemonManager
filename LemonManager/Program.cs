@@ -6,17 +6,19 @@ namespace LemonManager;
 
 internal class Program
 {
-    // Initialization code. Don't use any Avalonia, third-party APIs or any
-    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-    // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args)
     {
+        AppDomain.CurrentDomain.UnhandledException += async (sender, arg) =>
+        {
+            ModManager.Logger.Error("Unhandled exception " + arg);
+            await PromptHandler.Instance?.PromptUser("Unhandled Exception", "The application ran into something unexpected, please report the problem on Github.", ModManager.PromptType.Notification);
+        };
+
         BuildAvaloniaApp()
         .StartWithClassicDesktopLifetime(args);
     }
 
-    // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()

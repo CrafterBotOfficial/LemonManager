@@ -33,14 +33,13 @@ namespace LemonManager.ViewModels
             await ServerManager.Initialize(new PromptHandler());
             await SelectApplication(false);
             await PopulateLemons();
+            IsLoading = false;
         }
 
         public async Task PopulateLemons()
         {
-            IsLoading = true;
             await ModListView.PopulateLemons();
             await PluginListView.PopulateLemons();
-            IsLoading = false;
         }
 
         public async Task SelectApplication(bool forceNewSelection)

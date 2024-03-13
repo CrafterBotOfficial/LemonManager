@@ -11,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 
 namespace LemonManager.ViewModels;
@@ -35,10 +34,10 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         });
     }
 
-    private async void Logcat()
+    private void Logcat()
     {
         string adbPath = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools", "adb.exe");
-        
+
         Logger.Log("Starting logcat");
         Process.Start(new ProcessStartInfo(adbPath)
         {
