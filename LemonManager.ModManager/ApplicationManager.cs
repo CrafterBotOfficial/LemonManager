@@ -88,8 +88,9 @@ public class ApplicationManager
         LemonInfo? info = LoadLemon(localDLL);
         if (!info.HasValue) return; // Not a DLL file / Melon
 
-        string remoteDestination = string.Format(FilePaths.RemoteApplicationDataPath, Info.Id) + (info.Value.IsPlugin ? "Plugins" : "Mods");
-        await DeviceManager.Push(localDLL, remoteDestination);
+        string remoteDestination = string.Format(FilePaths.RemoteApplicationDataPath, Info.Id) + (info.Value.IsPlugin ? "Plugins/" : "Mods/") + Path.GetFileName(info.Value.RemotePath);
+        Logger.Log("Pushing to " + remoteDestination);
+        await DeviceManager.Push($"\"{localDLL}\"", $"\"{remoteDestination}\"");
     }
 
     public void UninstallLemon(string remotePath)
