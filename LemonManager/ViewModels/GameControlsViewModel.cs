@@ -1,7 +1,10 @@
-﻿using DynamicData;
+﻿using Avalonia.Controls;
+using DynamicData;
 using LemonManager.Models;
 using LemonManager.ModManager;
+using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
+using LemonManager.Views;
 using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
@@ -16,7 +19,7 @@ namespace LemonManager.ViewModels;
 public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
 {
     public ObservableCollection<GameControlButtonModel> Options { get; } = new ObservableCollection<GameControlButtonModel>();
-    
+
     private ModdedApplicationModel moddedApplication => MainWindowViewModel.Instance.ApplicationManager.Info;
     public string Info => string.Format(ApplicationInfoTemplate, moddedApplication.Id, moddedApplication.Version, moddedApplication.UnityVersion);
 
@@ -27,6 +30,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
             new GameControlButtonModel("MelonLog", MelonLog),
             new GameControlButtonModel("Clear LemonCache", ClearLemonCache),
             new GameControlButtonModel("Stop Game", "Start Game", StartStopGame),
+            new GameControlButtonModel("Download Game Data", DownloadGameData),
             new GameControlButtonModel("Change Application", ChangeApplication)
         });
     }
@@ -84,6 +88,17 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         return !isRunning;
     }
 
+    private async void DownloadGameData()
+    {
+        var dialog = new OpenFolderDialog();
+        var result = await dialog.ShowAsync(MainWindow.Instance);
+
+        MainWindowViewModel.LoadingStatus = "Downloading data";
+        await DeviceManager.Pull(string.Format(FilePaths.RemoteApplicationDataPath, moddedApplication.Id), result);
+        await PromptHandler.Instance.PromptUser("Success", $"Successfully downloaded {moddedApplication.Id}'s data.", PromptType.Notification);
+        MainWindowViewModel.IsLoading = false;
+    }
+
     private async void ChangeApplication()
     {
         MainWindowViewModel.LoadingStatus = "Changing application";
@@ -94,9 +109,8 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         MainWindowViewModel.IsLoading = false;
     }
 
-    private const string ApplicationInfoTemplate = 
+    private const string ApplicationInfoTemplate =
         "PackageName: {0}\n" +
         "Version: {1}\n" +
-        "Unity Version: {2}\n" +
-        "";
+        "Unity Version: {2}\n";
 }

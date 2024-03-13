@@ -78,6 +78,7 @@ namespace LemonManager.ViewModels
             {
                 Instance.Status = value;
                 Instance.RaisePropertyChanged(nameof(Status));
+                IsLoading = true;
             }
         }
         public static bool IsLoading

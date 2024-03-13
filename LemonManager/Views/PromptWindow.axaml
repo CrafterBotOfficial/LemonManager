@@ -9,8 +9,8 @@
         Width="250" Height="125"
         WindowStartupLocation="CenterOwner">
 
-  <StackPanel HorizontalAlignment="Center">
-    <TextBlock FontSize="20" Text="{Binding Title}"/>
+  <StackPanel>
+    <TextBlock HorizontalAlignment="Center" FontSize="20" Text="{Binding Title}"/>
     <TextBlock HorizontalAlignment="Left"
                TextWrapping="WrapWithOverflow"
                Text="{Binding Message}"/>
