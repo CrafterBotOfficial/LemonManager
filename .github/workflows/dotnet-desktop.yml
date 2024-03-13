@@ -38,4 +38,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: avalonia-app-build
-        path: D:\a\LemonManager\LemonManager\LemonManager\bin\Release\net6.0
+        path: .\LemonManager\LemonManager\LemonManager\bin\Release\net6.0
