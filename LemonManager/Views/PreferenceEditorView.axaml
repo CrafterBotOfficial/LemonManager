@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LemonManager.ViewModels"
+             mc:Ignorable="d"
+             x:Class="LemonManager.Views.PreferenceEditorView" x:DataType="vm:PreferenceEditorViewModel"
+             Width="750" Height="425">
+
+  <Grid>
+    <ScrollViewer>
+      <ItemsRepeater ItemsSource="{Binding Entries}">
+        <ItemsRepeater.ItemTemplate>
+          <DataTemplate>
+
+            <StackPanel>
+              <TextBlock FontSize="20" Text="{Binding Name}"/>
+              <ItemsRepeater ItemsSource="{Binding Entries}">
+                <ItemsRepeater.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel>
+                      <TextBlock Text="{Binding Name}"/>
+                      <TextBlock FontSize="10" Text="{Binding Description}"/>
+                      <TextBox Text="{Binding Value}"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+              </ItemsRepeater>
+            </StackPanel>
+
+          </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+      </ItemsRepeater>
+    </ScrollViewer>
+
+    <Button HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="20"
+            Command="{Binding SaveCommand}">Save</Button>
+  </Grid>
+</UserControl>

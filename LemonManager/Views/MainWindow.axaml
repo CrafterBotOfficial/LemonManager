@@ -41,6 +41,10 @@
         <TabItem Header="Game Controls">
           <UserControl Content="{Binding GameControlsView}"/>
         </TabItem>
+        <!--
+        <TabItem Header="Melon Preferences">
+        <UserControl Content="{Binding PreferenceEditorView}"/>
+        </TabItem> -->
       </TabControl>
     </StackPanel>
   </Panel>

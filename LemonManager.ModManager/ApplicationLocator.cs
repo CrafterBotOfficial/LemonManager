@@ -70,7 +70,7 @@ public static class ApplicationLocator
             {
                 Id = apkInfo.packageName,
                 Version = apkInfo.versionName,
-                UnityVersion = GetUnityVersion(zipArchive),
+                UnityVersion = GetUnityVersion(zipArchive) ?? "UNKNOWN",
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
                 Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
@@ -83,20 +83,27 @@ public static class ApplicationLocator
     // TODO: Refactor this, since there may be no data.unity3d and globalgamemanagers
     private static string GetUnityVersion(ZipArchive archive)
     {
-        bool dataUnity3dExists = archive.Entries.Any(entry => entry.Name == "data.unity3d");
-        var entry = archive.GetEntry("assets/bin/Data/" + (dataUnity3dExists ? "data.unity3d" : "globalgamemanagers"));
-
-        Logger.Log("Extracting unity version");
-        using Stream stream = entry.Open();
-        using MemoryStream memoryStream = new MemoryStream();
-        stream.CopyTo(memoryStream);
-
-        memoryStream.Position = dataUnity3dExists ? 0x12 : 0x14;
-        using (BinaryReader reader = new BinaryReader(memoryStream))
+        try
         {
-            string version = Encoding.Default.GetString(reader.ReadBytes(11));
-            Logger.Log("Detected version " + version);
-            return version;
+            bool dataUnity3dExists = archive.Entries.Any(entry => entry.Name == "data.unity3d");
+            var entry = archive.GetEntry("assets/bin/Data/" + (dataUnity3dExists ? "data.unity3d" : "globalgamemanagers"));
+
+            Logger.Log("Extracting unity version");
+            using Stream stream = entry.Open();
+            using MemoryStream memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+
+            memoryStream.Position = dataUnity3dExists ? 0x12 : 0x14;
+            using (BinaryReader reader = new BinaryReader(memoryStream))
+            {
+                string version = Encoding.Default.GetString(reader.ReadBytes(11));
+                Logger.Log("Detected version " + version);
+                return version;
+            }
+        }
+        catch
+        {
+            return null;
         }
     }
 

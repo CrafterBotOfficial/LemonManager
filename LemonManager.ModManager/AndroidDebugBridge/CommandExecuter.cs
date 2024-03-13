@@ -19,9 +19,14 @@ internal static class CommandExecuter
         process.EnableRaisingEvents = true;
 
         string output = string.Empty;
+
         process.OutputDataReceived += (sender, args) => output += args.Data + "\n";
+
         process.BeginOutputReadLine();
+        
         if (!process.WaitForExit(timeout)) process.Kill();
+        if (process.ExitCode != 0)
+            Logger.Error($"Error running adb {process.ExitCode} {process.StandardError.ReadToEnd()}");
 
         return output.Trim();
     }

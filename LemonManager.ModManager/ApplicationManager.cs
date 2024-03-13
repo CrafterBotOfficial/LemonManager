@@ -51,6 +51,8 @@ public class ApplicationManager
     {
         try
         {
+            Type melonPluginType = melonLoaderAssembly.GetType("MelonLoader.MelonPlugin");
+
             using Stream stream = File.OpenRead(file);
             byte[] buffer = new byte[stream.Length];
             stream.Read(buffer, 0, buffer.Length);
@@ -61,7 +63,8 @@ public class ApplicationManager
             if (!attributes.Any(attribute => attribute.AttributeType.FullName == "MelonLoader.MelonInfoAttribute")) return null;
 
             var entryPointArgs = attributes.Single(x => x.AttributeType.FullName == "MelonLoader.MelonInfoAttribute").ConstructorArguments;
-            bool isPlugin = entryPointArgs[0].Value.GetType().IsSubclassOf(melonLoaderAssembly.GetType("MelonLoader.MelonPlugin"));
+            bool isPlugin = (entryPointArgs[0].Value as Type).IsSubclassOf(melonPluginType);
+
             return new() // TODO: Add other contructor variants
             {
                 Name = (string)entryPointArgs[1].Value,
