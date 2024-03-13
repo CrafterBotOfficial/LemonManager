@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ public static class ServerManager
     {
         TaskCompletionSource<string> taskCompletionSource = new TaskCompletionSource<string>();
         string adbDirectory = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools");
-        string adbPath = Path.Combine(adbDirectory, "adb.exe");
+        string adbPath = Path.Combine(adbDirectory, OperatingSystem.IsWindows() ? "adb.exe" : "adb");
 
         if (!Directory.Exists(adbDirectory) || !File.Exists(adbPath))
         {
@@ -40,7 +41,8 @@ public static class ServerManager
                     File.Delete(tempFile);
                     taskCompletionSource.SetResult(adbPath);
                 };
-                webClient.DownloadFileAsync(new("https://dl.google.com/android/repository/platform-tools-latest-windows.zip"), tempFile);
+                string url = OperatingSystem.IsWindows() ? "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" : OperatingSystem.IsLinux() ? "https://dl.google.com/android/repository/platform-tools-latest-linux.zip" : "https://dl.google.com/android/repository/platform-tools-latest-darwin.zip";
+                webClient.DownloadFileAsync(new(url), tempFile);
             }
         }
         else taskCompletionSource.SetResult(adbPath);

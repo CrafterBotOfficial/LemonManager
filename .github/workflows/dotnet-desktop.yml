@@ -1,4 +1,5 @@
-name: Avalonia .NET 6 Build on Windows
+# Generated with AI, phind
+name: Avalonia .NET 6 Build
 
 on:
  push:
@@ -10,7 +11,11 @@ on:
 
 jobs:
  build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        dotnet-version: ['6.0.x']
 
     steps:
     - uses: actions/checkout@v2
@@ -18,7 +23,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '6.0.x'
+        dotnet-version: ${{ matrix.dotnet-version }}
 
     - name: Restore dependencies
       run: dotnet restore
@@ -33,4 +38,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: avalonia-app-build
-        path: D:\a\LemonManager\LemonManager\LemonManager\bin\Release\net6.0
+        path: ${{ github.workspace }}/LemonManager/LemonManager/bin/Release/net6.0
