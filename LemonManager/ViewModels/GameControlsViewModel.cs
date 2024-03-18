@@ -60,11 +60,16 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
     private bool StartStopGame()
     {
         string packageName = MainWindowViewModel.Instance.ApplicationManager.Info.Id;
-        bool isRunning = ModManager.AndroidDebugBridge.DeviceManager.SendShellCommand("pidof " + packageName) != string.Empty;
+        bool isRunning = DeviceManager.SendShellCommand("pidof " + packageName) != string.Empty;
+        bool isMetaQuest = DeviceManager.CurrentDevice.Model.StartsWith("Quest");
+
         Logger.Log($"{packageName} is current running? {isRunning}");
 
-        string command = isRunning ? $"am force-stop {packageName}" : $"monkey -p {packageName} 1";
-        ModManager.AndroidDebugBridge.DeviceManager.SendShellCommand(command);
+        if (isMetaQuest)
+        {
+            DeviceManager.SendShellCommand($"am broadcast -a com.oculus.vrpowermanager.{(isRunning ? "automation_disable" : "prox_close")}"); // I found this command in Sidequest's source code
+        }
+        DeviceManager.SendShellCommand(isRunning ? $"am force-stop {packageName}" : $"monkey -p {packageName} 1");
 
         return !isRunning;
     }
@@ -72,12 +77,11 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
     private async void DownloadGameData()
     {
         var dialog = new OpenFolderDialog();
-        var result = await dialog.ShowAsync(MainWindow.Instance);
+        var result = Path.GetFullPath((await dialog.ShowAsync(MainWindow.Instance)) ?? Directory.GetCurrentDirectory());
 
-        MainWindowViewModel.LoadingStatus = "Downloading data";
-        await DeviceManager.Pull(string.Format(FilePaths.RemoteApplicationDataPath, moddedApplication.Id), result);
+        await DeviceManager.Pull(string.Format(FilePaths.RemoteApplicationDataPath, moddedApplication.Id), Path.GetFullPath(result));
+        Logger.Log("Pulled files to " + result);
         await PromptHandler.Instance.PromptUser("Success", $"Successfully downloaded {moddedApplication.Id}'s data.", PromptType.Notification);
-        MainWindowViewModel.IsLoading = false;
     }
 
     private async void ChangeApplication()

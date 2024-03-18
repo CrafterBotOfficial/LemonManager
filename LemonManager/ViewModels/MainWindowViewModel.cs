@@ -20,7 +20,7 @@ namespace LemonManager.ViewModels
         public LemonListViewModel ModListView { get; } = new LemonListViewModel();
         public LemonListViewModel PluginListView { get; } = new LemonListViewModel() { IsPluginView = true };
         public GameControlsViewModel GameControlsView { get; } = new GameControlsViewModel();
-        // public PreferenceEditorViewModel PreferenceEditorView { get; } = new PreferenceEditorViewModel();
+        public PreferenceEditorViewModel PreferenceEditorView { get; } = new PreferenceEditorViewModel();
 
         public ICommand ChangeApplicationCommand { get; set; }
 
@@ -50,6 +50,7 @@ namespace LemonManager.ViewModels
 
         public async Task SelectApplication(bool forceNewSelection)
         {
+            PromptHandler.Instance.SetStatus("Locating targetted application");
             var apps = ApplicationLocator.GetApplications();
 
             if (forceNewSelection) AppSettings.Default.SelectedApplicationId = string.Empty;
@@ -70,7 +71,7 @@ namespace LemonManager.ViewModels
                 AppSettings.Default.SelectedApplicationId = apps.ElementAt(await PromptHandler.Instance.PromptUser("Select a Application", apps.Select(app => app.Key).ToArray())).Key;
             }
             ApplicationManager = new ApplicationManager(moddedInfo);
-            // PreferenceEditorView.Init(ApplicationManager.Info.Id);
+            PreferenceEditorView.Init(ApplicationManager.Info.Id);
             AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
             this.RaisePropertyChanged(nameof(AppIcon));
             this.RaisePropertyChanged(nameof(HasIcon));

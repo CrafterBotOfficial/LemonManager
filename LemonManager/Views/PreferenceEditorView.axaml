@@ -8,7 +8,14 @@
              Width="750" Height="425">
 
   <Grid>
-    <ScrollViewer>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                IsVisible="{Binding !FileExists}">
+      <TextBlock>File not found</TextBlock>
+    </StackPanel>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
+                  IsVisible="{Binding FileExists}"
+                  Margin="50">
       <ItemsRepeater ItemsSource="{Binding Entries}">
         <ItemsRepeater.ItemTemplate>
           <DataTemplate>
@@ -33,9 +40,13 @@
       </ItemsRepeater>
     </ScrollViewer>
 
-    <Button HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Margin="20"
-            Command="{Binding SaveCommand}">Save</Button>
+    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="30">
+      <Button IsVisible="{Binding FileExists}"
+              Command="{Binding SaveCommand}">Save</Button>
+      <Button IsVisible="{Binding FileExists}"
+              Command="{Binding DeleteFileCommand}">Delete</Button>
+      <Button Command="{Binding RefreshEntriesCommand}">Refresh</Button>
+    </StackPanel>
   </Grid>
 </UserControl>

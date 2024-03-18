@@ -69,21 +69,44 @@ public static class DeviceManager
 
     public static async Task DetermineDevice()
     {
-        Logger.Log("Finding device");
-        var devices = GetDevices();
+        Logger.SetStatus("Finding device");
+        var deviceDeterminationCompletionSource = new TaskCompletionSource<bool>();
+        var devices = await GetDevices();
 
         if (devices.Length == 1) CurrentDevice = new DeviceInfo(devices.First());
         else
         {
+            USBMonitor(deviceDeterminationCompletionSource.Task, (deviceArray) => ServerManager.PromptHandler.UpdateMultiSelectionPrompt("Select Device", deviceArray.Select(device => device.Model).ToArray()));
+
             int result = await ServerManager.PromptHandler.PromptUser("Select Device", devices.Select(device => device.Model).ToArray());
-            CurrentDevice = new(devices[result]);
+            CurrentDevice = new((await GetDevices())[result]);
+            deviceDeterminationCompletionSource.SetResult(true);
         }
     }
 
-    private static Device[] GetDevices()
+    private static int deviceCount;
+    private static async Task USBMonitor(Task task, Action<Device[]> onDevicesChanged)
+    {
+        deviceCount = (await GetDevices()).Length;
+        while (!task.IsCompleted)
+            try
+            {
+                var devices = await GetDevices();
+                if (deviceCount != devices.Length) onDevicesChanged(devices);
+                await Task.Delay(2500);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Error in USBMonitor: {ex.Message}");
+            }
+        Logger.Log("usb monitor completed");
+    }
+
+
+    private static async Task<Device[]> GetDevices()
     {
         List<Device> devices = new List<Device>();
-        string[] lines = CommandExecuter.SendCommand("devices -l").Split('\n');
+        string[] lines = (await CommandExecuter.SendCommandAsync("devices -l")).Split('\n');
         foreach (string line in lines)
         {
             var match = Regex.Match(line, @"^([^\s]+)\s+device\s+product:([^\s]+)\s+model:([^\s]+)");

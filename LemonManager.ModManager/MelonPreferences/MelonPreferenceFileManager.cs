@@ -1,7 +1,6 @@
 ﻿using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.MelonPreferences.Models;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace LemonManager.ModManager.MelonPreferences;
@@ -15,11 +14,13 @@ public class MelonPreferenceFileManager
 
     public MelonPreferenceFileManager(string remotePath)
     {
-        RemotePath = remotePath;
-        RawText = DeviceManager.SendShellCommand($"cat {remotePath}");
-
-        Logger.Log(RawText);
-        ParseFile();
+        try
+        {
+            RemotePath = remotePath;
+            RawText = DeviceManager.SendShellCommand($"cat {remotePath}");
+            ParseFile();
+        }
+        catch { } // config path most likely doesn't exists
     }
 
     private string lastComment = string.Empty;
@@ -29,51 +30,59 @@ public class MelonPreferenceFileManager
         List<MelonPreferenceSection> sections = new();
         foreach (string line in RawText.Split('\n'))
         {
-            string formattedLine = line.Trim();
-
-            if (formattedLine.Length < 0) continue;
-
-            // New section
-            if (formattedLine.StartsWith('[') && formattedLine.EndsWith(']'))
+            try
             {
-                sections.Add(new(formattedLine.Replace("[", "").Replace("]", "")));
-                continue;
+                string formattedLine = line.Trim();
+
+                if (formattedLine.Length < 0) continue;
+
+                // New section
+                if (formattedLine.StartsWith('[') && formattedLine.EndsWith(']'))
+                {
+                    sections.Add(new(formattedLine.Replace("[", "").Replace("]", "")));
+                    continue;
+                }
+
+                // Comment
+                if (formattedLine.StartsWith("#"))
+                {
+                    lastComment = formattedLine.Replace("#", "");
+                    continue;
+                }
+
+                // Entry
+                if (formattedLine.Contains(" = "))
+                {
+                    string name = formattedLine.Split(' ')[0];
+                    string value = formattedLine.Split(" = ")[1].Trim() ?? "UNKNOWN";
+                    sections.Last().Values.Add(name, (value, lastComment));
+                }
             }
-
-            // Comment
-            if (formattedLine.StartsWith("#"))
+            catch (System.Exception ex)
             {
-                lastComment = formattedLine.Replace("#", "");
-                continue;
-            }
-
-            // Entry
-            if (formattedLine.Contains(" = "))
-            {
-                string name = formattedLine.Split(' ')[0];
-                string value = formattedLine.Split(" = ")[1].Trim() ?? "UNKNOWN";
-                sections.Last().Values.Add(name, (value, lastComment));
+                Logger.Warning($"Couldn't parse line \"{line}\" {ex.Message}");
             }
         }
 
         Sections = sections.ToArray();
     }
 
-    public async void SetValue(string key, string value)
+    public async void SetValue(string key, string newValue)
     {
         string[] lines = RawText.Split('\n');
-        Logger.Log(lines.Length);
+
         int lineIndex = 0;
         for (lineIndex = 0; lineIndex < lines.Length; lineIndex++)
             if (lines[lineIndex].StartsWith(key)) break;
 
         string oldValue = lines[lineIndex].Split('=')[1].Trim();
-        lines[lineIndex] = lines[lineIndex].Replace(oldValue, value);
-  
-        string tempPath = Path.GetTempFileName();
-        File.WriteAllLines(tempPath, lines);
-        DeviceManager.SendShellCommand("rm -f " + RemotePath);
-        await DeviceManager.Push(tempPath, RemotePath);
-        File.Delete(tempPath);
+        lines[lineIndex] = lines[lineIndex].Replace(oldValue, newValue);
+
+        await DeviceManager.SendShellCommandAsync($"echo \"\" > {RemotePath}");
+        foreach (string line in lines)
+        {
+            Logger.Log(line); // .Replace("\"", "\\\"")
+            await DeviceManager.SendShellCommandAsync($"echo \'{line.Replace("\"", "\\\"")}\' >> \'{RemotePath}\'");
+        }
     }
 }
