@@ -54,4 +54,9 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\LemonListView.axaml" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="Assets\" />
+  </ItemGroup>
 </Project>

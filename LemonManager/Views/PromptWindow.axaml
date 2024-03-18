@@ -5,7 +5,7 @@
         xmlns:vm="using:LemonManager.ViewModels"
         mc:Ignorable="d"
         x:Class="LemonManager.Views.PromptWindow" x:DataType="vm:PromptWindowViewModel"
-        Title="PromptWindow"
+        Icon="/Assets/icon.ico" Title="PromptWindow"
         Width="250" Height="125"
         WindowStartupLocation="CenterOwner">
 

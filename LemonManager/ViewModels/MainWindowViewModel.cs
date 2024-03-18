@@ -1,9 +1,9 @@
-﻿using LemonManager.ModManager;
+﻿using Avalonia.Media.Imaging;
+using LemonManager.ModManager;
 using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using ReactiveUI;
 using System.ComponentModel;
-using Avalonia.Media.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -71,8 +71,8 @@ namespace LemonManager.ViewModels
             }
             ApplicationManager = new ApplicationManager(moddedInfo);
             // PreferenceEditorView.Init(ApplicationManager.Info.Id);
-            AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon);
-            this.RaisePropertyChanged(nameof(AppIcon)); 
+            AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
+            this.RaisePropertyChanged(nameof(AppIcon));
             this.RaisePropertyChanged(nameof(HasIcon));
             AppSettings.Default.Save();
         }

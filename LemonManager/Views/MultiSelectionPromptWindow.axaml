@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         x:Class="LemonManager.Views.MultiSelectionPromptWindow" x:DataType="vm:MultiSelectionPromptWindowViewModel"
-        Title="MultiPromptWindow"
+        Icon="/Assets/icon.ico" Title="MultiPromptWindow"
         Width="250" Height="125"
         WindowStartupLocation="CenterOwner">
 

@@ -1,4 +1,3 @@
-# Generated with AI, phind
 name: Avalonia .NET 6 Build
 
 on:
@@ -19,6 +18,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Fetch all history for all branches and tags
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
@@ -29,7 +30,7 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Release --no-restore
 
     - name: Run tests
       run: dotnet test --no-build --verbosity normal
@@ -37,5 +38,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: avalonia-app-build
-        path: .\LemonManager\LemonManager\LemonManager\bin\Release\net6.0
+        name: ${{ matrix.os }}-artifacts
+        path: ./LemonManager/LemonManager/bin/Release/net6.0/
