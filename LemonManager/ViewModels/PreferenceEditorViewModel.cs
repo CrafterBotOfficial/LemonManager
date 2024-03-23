@@ -68,7 +68,7 @@ public class PreferenceEditorViewModel : ViewModelBase, INotifyPropertyChanged
             for (int i = 0; i < section.Values.Count; i++)
             {
                 var entry = section.Values.ElementAt(i);
-                entries[i] = new(entry.Key, entry.Value.comment, entry.Value.value);
+                entries[i] = new(entry.Key.Trim(), entry.Value.comment.Trim(), entry.Value.value.Trim());
             }
 
             Entries.Add(new PreferenceSectionModel(section.Name, entries));

@@ -10,7 +10,7 @@ public class PreferenceSectionModel
 
     public PreferenceSectionModel(string name, PreferenceEntryModel[] entries)
     {
-        Name = name;
+        Name = name.Replace("\"", string.Empty);
         Entries.AddRange(entries);
     }
 }

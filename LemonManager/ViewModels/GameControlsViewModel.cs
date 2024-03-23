@@ -138,5 +138,5 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         "PackageName: {0}\n" +
         "Version: {1}\n" +
         "Unity Version: {2}\n" +
-        "IL2Cpp Version: {3}";
+        "IL2Cpp Version: v{3}";
 }

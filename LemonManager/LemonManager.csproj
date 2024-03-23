@@ -6,6 +6,14 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <PackageIcon>icon.ico</PackageIcon>
+    <RepositoryUrl>https://github.com/CrafterBotOfficial/LemonManager</RepositoryUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>1</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>1</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -48,15 +56,14 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>AppSettings.Designer.cs</LastGenOutput>
     </None>
+    <None Update="Assets\icon.ico">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\LemonListView.axaml" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="Assets\" />
   </ItemGroup>
 </Project>

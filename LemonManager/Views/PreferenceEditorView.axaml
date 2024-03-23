@@ -21,13 +21,13 @@
           <DataTemplate>
 
             <StackPanel>
-              <TextBlock FontSize="20" Text="{Binding Name}"/>
+              <TextBlock FontSize="15" Text="{Binding Name}"/>
               <ItemsRepeater ItemsSource="{Binding Entries}">
                 <ItemsRepeater.ItemTemplate>
                   <DataTemplate>
                     <StackPanel>
-                      <TextBlock Text="{Binding Name}"/>
-                      <TextBlock FontSize="10" Text="{Binding Description}"/>
+                      <TextBlock FontSize="15" Text="{Binding Name}"/>
+                      <TextBlock FontSize="15" Text="{Binding Description}"/>
                       <TextBox Text="{Binding Value}"/>
                     </StackPanel>
                   </DataTemplate>

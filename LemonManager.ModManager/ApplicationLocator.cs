@@ -31,7 +31,7 @@ public static class ApplicationLocator
             }
 
             string id = match.Groups[2].Value;
-            if (id.StartsWith("com.oculus")) continue;
+            if (id.StartsWith("com.oculus") || id.StartsWith("com.android")) continue;
 
             infos.Add(id, new ApplicationInfo(match.Groups[1].Value + ".apk", id));
         }
@@ -45,6 +45,7 @@ public static class ApplicationLocator
         string localDirectory = Path.Combine(FilePaths.LemonCacheDirectory, info.Id);
         if (!Directory.Exists(localDirectory)) Directory.CreateDirectory(localDirectory);
 
+        Logger.SetStatus("Comparing hashes");
         string localAPK = Path.Combine(localDirectory, "base.apk.zip");
         Stream localAPKReadStream = File.Exists(localAPK) ? File.OpenRead(localAPK) : null;
 
@@ -129,7 +130,7 @@ public static class ApplicationLocator
 
         uint versionNumber = BitConverter.ToUInt32(buffer, 4);
         Logger.Log("Il2Cpp version " + versionNumber);
-        return "v" + versionNumber;
+        return versionNumber.ToString();
     }
 
     private static byte[] GetBytes(ZipArchiveEntry entry)
