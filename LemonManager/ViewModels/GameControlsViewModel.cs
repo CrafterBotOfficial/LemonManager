@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 
 namespace LemonManager.ViewModels;
 
@@ -29,6 +30,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
             new GameControlButtonModel("Clear LemonCache", ClearLemonCache),
             new GameControlButtonModel("Stop Game", "Start Game", StartStopGame),
             new GameControlButtonModel("Download Game Data", DownloadGameData),
+            new GameControlButtonModel("Download Header File", DownloadHeaderFiles),
             new GameControlButtonModel("Change Application", ChangeApplication),
         });
     }
@@ -82,6 +84,25 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         await DeviceManager.Pull(string.Format(FilePaths.RemoteApplicationDataPath, moddedApplication.Id), Path.GetFullPath(result));
         Logger.Log("Pulled files to " + result);
         await PromptHandler.Instance.PromptUser("Success", $"Successfully downloaded {moddedApplication.Id}'s data.", PromptType.Notification);
+    }
+
+    private async void DownloadHeaderFiles()
+    {
+        try
+        {
+            var dialog = new OpenFolderDialog();
+            string outputPath = Path.GetFullPath(await dialog.ShowAsync(MainWindow.Instance)) ?? null;
+            if (outputPath is null) return;
+
+            string url = $"https://raw.githubusercontent.com/nneonneo/Il2CppVersions/master/headers/{moddedApplication.UnityVersion}.h";
+            Logger.Log("Header file url " + url);
+            using WebClient webClient = new WebClient();
+            await webClient.DownloadFileTaskAsync(url, Path.Combine(outputPath, "il2cpp.h"));
+        }
+        catch
+        {
+            await PromptHandler.Instance.PromptUser("Failed Download", "Couldn't download il2cpp header file for application " + moddedApplication.UnityVersion, PromptType.Notification);
+        }
     }
 
     private async void ChangeApplication()
