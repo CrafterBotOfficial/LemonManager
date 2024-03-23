@@ -28,6 +28,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         {
             new GameControlButtonModel("Logcat", Logcat),
             new GameControlButtonModel("Clear LemonCache", ClearLemonCache),
+            new GameControlButtonModel("Clear MelonLoader Logs", ClearRemoteMelonLogs),
             new GameControlButtonModel("Stop Game", "Start Game", StartStopGame),
             new GameControlButtonModel("Download Game Data", DownloadGameData),
             new GameControlButtonModel("Download Header File", DownloadHeaderFiles),
@@ -57,6 +58,24 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         {
             Logger.Error("Couldn't clear LemonCache " + ex);
         }
+    }
+
+    private async void ClearRemoteMelonLogs()
+    {
+        string remoteLogDirectory = moddedApplication.RemoteDataPath + "/melonloader/etc/logs/";
+        if (!await PromptHandler.Instance.PromptUser("Are You Sure?", $"If you continue all MelonLoader log files located in the game's MelonLoader log directory will be deleted.", PromptType.Confirmation))
+            return;
+
+        string[] files = ModManager.AndroidDebugBridge.DeviceManager.GetFiles(remoteLogDirectory);
+        foreach (string file in files)
+        {
+            if (!file.EndsWith(".log")) continue;
+            Logger.Log($"Deleting {file}");
+
+            await DeviceManager.SendShellCommandAsync("rm -f " + file);
+        }
+
+        await PromptHandler.Instance.PromptUser("Success", "Purged all files ending with .log in melon log directory.", PromptType.Notification);
     }
 
     private bool StartStopGame()

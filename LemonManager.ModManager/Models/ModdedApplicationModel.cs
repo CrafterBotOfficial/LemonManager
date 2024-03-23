@@ -10,5 +10,7 @@ public class ModdedApplicationModel
 
     public string RemoteAPKPath;
     public string LocalAPKPath;
+    public string RemoteDataPath;
+
     public byte[]? Icon;
 }

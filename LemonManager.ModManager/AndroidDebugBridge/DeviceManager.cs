@@ -39,7 +39,7 @@ public static class DeviceManager
 
     public static string[] GetFiles(string remotePath)
     {
-        return SendShellCommand($"ls -m {remotePath}").Split('\n').Select(x => x.Insert(0, remotePath + "/")).ToArray();
+        return SendShellCommand($"ls -m {remotePath}").Split('\n', ',').Select(x => x.Trim().Insert(0, remotePath + "/").Trim()).ToArray();
     }
 
     public static bool CompareFileHashs(string remoteFile, string localFile)

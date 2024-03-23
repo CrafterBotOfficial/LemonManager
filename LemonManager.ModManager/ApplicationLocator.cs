@@ -75,6 +75,8 @@ public static class ApplicationLocator
 
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
+                RemoteDataPath = $"/sdcard/Android/data/{info.Id}/files/",
+
                 Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
             };
         }
