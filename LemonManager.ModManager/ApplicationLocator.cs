@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -69,8 +68,11 @@ public static class ApplicationLocator
             return new()
             {
                 Id = apkInfo.packageName,
+
                 Version = apkInfo.versionName,
                 UnityVersion = GetUnityVersion(zipArchive) ?? "UNKNOWN",
+                Il2CppVersion = GetIL2CppVersion(zipArchive.GetEntry("assets/bin/Data/Managed/Metadata/global-metadata.dat")) ?? "UNKNOWN", // unkown if mono
+
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
                 Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
@@ -80,7 +82,6 @@ public static class ApplicationLocator
         return null;
     }
 
-    // TODO: Refactor this, since there may be no data.unity3d and globalgamemanagers
     private static string GetUnityVersion(ZipArchive archive)
     {
         try
@@ -97,7 +98,7 @@ public static class ApplicationLocator
             using (BinaryReader reader = new BinaryReader(memoryStream))
             {
                 string version = Encoding.Default.GetString(reader.ReadBytes(11));
-                Logger.Log("Detected version " + version);
+                Logger.Log("Detected Unity version " + version);
                 return version;
             }
         }
@@ -105,6 +106,28 @@ public static class ApplicationLocator
         {
             return null;
         }
+    }
+
+    // https://katyscode.wordpress.com/2020/12/27/il2cpp-part-2/
+    private static string GetIL2CppVersion(ZipArchiveEntry il2cpp_metadata) // width 32
+    {
+        if (il2cpp_metadata is null)
+            return null;
+
+        using Stream stream = il2cpp_metadata.Open();
+        byte[] buffer = new byte[8];
+        stream.Read(buffer, 0, 8);
+
+        var signature = BitConverter.ToUInt32(buffer, 0);
+        if (signature != 0xFAB11BAF)
+        {
+            Logger.Warning("Metadata starts with a unknown signature " + signature);
+            return null;
+        }
+
+        uint versionNumber = BitConverter.ToUInt32(buffer, 4);
+        Logger.Log("Il2Cpp version " + versionNumber);
+        return "v" + versionNumber;
     }
 
     private static byte[] GetBytes(ZipArchiveEntry entry)

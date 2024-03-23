@@ -19,7 +19,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
     public ObservableCollection<GameControlButtonModel> Options { get; } = new ObservableCollection<GameControlButtonModel>();
 
     private ModdedApplicationModel moddedApplication => MainWindowViewModel.Instance.ApplicationManager.Info;
-    public string Info => string.Format(ApplicationInfoTemplate, moddedApplication.Id, moddedApplication.Version, moddedApplication.UnityVersion);
+    public string Info => string.Format(ApplicationInfoTemplate, moddedApplication.Id, moddedApplication.Version, moddedApplication.UnityVersion, moddedApplication.Il2CppVersion);
 
     public GameControlsViewModel()
     {
@@ -29,7 +29,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
             new GameControlButtonModel("Clear LemonCache", ClearLemonCache),
             new GameControlButtonModel("Stop Game", "Start Game", StartStopGame),
             new GameControlButtonModel("Download Game Data", DownloadGameData),
-            new GameControlButtonModel("Change Application", ChangeApplication)
+            new GameControlButtonModel("Change Application", ChangeApplication),
         });
     }
 
@@ -97,5 +97,6 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
     private const string ApplicationInfoTemplate =
         "PackageName: {0}\n" +
         "Version: {1}\n" +
-        "Unity Version: {2}\n";
+        "Unity Version: {2}\n" +
+        "IL2Cpp Version: {3}";
 }
