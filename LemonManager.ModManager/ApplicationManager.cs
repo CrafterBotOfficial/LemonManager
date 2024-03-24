@@ -11,14 +11,14 @@ namespace LemonManager.ModManager;
 
 public class ApplicationManager
 {
-    public ModdedApplicationModel Info;
+    public UnityApplicationInfoModel Info;
 
     public string ApplicationData => string.Format(FilePaths.RemoteApplicationDataPath, Info.Id);
 
     private static Assembly melonLoaderAssembly;
 
 
-    public ApplicationManager(ModdedApplicationModel info)
+    public ApplicationManager(UnityApplicationInfoModel info)
     {
         Info = info;
     }

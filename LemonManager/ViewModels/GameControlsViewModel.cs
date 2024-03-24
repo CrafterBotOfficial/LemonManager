@@ -19,7 +19,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
 {
     public ObservableCollection<GameControlButtonModel> Options { get; } = new ObservableCollection<GameControlButtonModel>();
 
-    private ModdedApplicationModel moddedApplication => MainWindowViewModel.Instance.ApplicationManager.Info;
+    private UnityApplicationInfoModel moddedApplication => MainWindowViewModel.Instance.ApplicationManager.Info;
     public string Info => string.Format(ApplicationInfoTemplate, moddedApplication.Id, moddedApplication.Version, moddedApplication.UnityVersion, moddedApplication.Il2CppVersion);
 
     public GameControlsViewModel()

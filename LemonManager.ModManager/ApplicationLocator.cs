@@ -39,28 +39,18 @@ public static class ApplicationLocator
         return infos;
     }
 
-    /// <returns>Null if not modded</returns>
-    public static async Task<ModdedApplicationModel> GetModdedApplicationInfo(ApplicationInfo info)
+    /// <returns>Null if isn't Unity app</returns>
+    public static async Task<UnityApplicationInfoModel> GetModdedApplicationInfo(ApplicationInfo info)
     {
-        string localDirectory = Path.Combine(FilePaths.LemonCacheDirectory, info.Id);
+        string localDirectory = GetLocalApplicationCache(info.Id);
         if (!Directory.Exists(localDirectory)) Directory.CreateDirectory(localDirectory);
 
-        Logger.SetStatus("Comparing hashes");
-        string localAPK = Path.Combine(localDirectory, "base.apk.zip");
-        Stream localAPKReadStream = File.Exists(localAPK) ? File.OpenRead(localAPK) : null;
-
-        if (localAPKReadStream is null || !DeviceManager.CompareFileHashs(info.RemoteAPKPath, localAPK))
-        {
-            Logger.SetStatus("Downloading remote APK");
-            if (File.Exists(localAPK)) File.Delete(localAPK);
-            await DeviceManager.Pull(info.RemoteAPKPath, localAPK);
-            localAPKReadStream = File.OpenRead(localAPK);
-        }
+        string localAPK = await DownloadRemoteApplication(info);
 
         Logger.SetStatus("Parsing APK");
 
         using ZipArchive zipArchive = ZipFile.OpenRead(localAPK);
-        if (zipArchive.Entries.Any(entry => entry.Name == "MelonLoader.dll"))
+        if (zipArchive.Entries.Any(entry => entry.Name == "libunity.so"))
         {
             byte[] manifestBytes = GetBytes(zipArchive.GetEntry("AndroidManifest.xml"));
             byte[] resourcesBytes = GetBytes(zipArchive.GetEntry("resources.arsc"));
@@ -74,6 +64,8 @@ public static class ApplicationLocator
                 UnityVersion = GetUnityVersion(zipArchive) ?? "UNKNOWN",
                 Il2CppVersion = GetIL2CppVersion(zipArchive.GetEntry("assets/bin/Data/Managed/Metadata/global-metadata.dat")) ?? "UNKNOWN", // unkown if mono
 
+                IsModded = zipArchive.Entries.Any(entry => entry.Name == "MelonLoader.dll"),
+
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
                 RemoteDataPath = $"/sdcard/Android/data/{info.Id}/files/",
@@ -81,8 +73,22 @@ public static class ApplicationLocator
                 Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
             };
         }
-        Logger.Log($"{info.Id} isn't modded");
+        Logger.Log($"{info.Id} isn't a Unity Application");
         return null;
+    }
+
+    public static async Task<string> DownloadRemoteApplication(ApplicationInfo info)
+    {
+        Logger.SetStatus("Comparing hashes");
+        string localAPK = Path.Combine(GetLocalApplicationCache(info.Id), "base.apk.zip");
+
+        if (!File.Exists(localAPK) || !DeviceManager.CompareFileHashs(info.RemoteAPKPath, localAPK))
+        {
+            Logger.SetStatus("Downloading remote APK");
+            if (File.Exists(localAPK)) File.Delete(localAPK);
+            await DeviceManager.Pull(info.RemoteAPKPath, localAPK);
+        }
+        return localAPK;
     }
 
     private static string GetUnityVersion(ZipArchive archive)
@@ -140,6 +146,8 @@ public static class ApplicationLocator
         stream.Read(buffer, 0, buffer.Length);
         return buffer;
     }
+
+    public static string GetLocalApplicationCache(string appId) => Path.Combine(FilePaths.LemonCacheDirectory, appId);
 
     public struct ApplicationInfo
     {

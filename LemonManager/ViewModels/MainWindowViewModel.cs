@@ -55,7 +55,7 @@ namespace LemonManager.ViewModels
 
             if (forceNewSelection) AppSettings.Default.SelectedApplicationId = string.Empty;
 
-            ModdedApplicationModel moddedInfo = null;
+            UnityApplicationInfoModel moddedInfo = null;
             while (moddedInfo is null)
             {
                 if (apps.TryGetValue(AppSettings.Default.SelectedApplicationId, out var appInfo))
@@ -64,7 +64,16 @@ namespace LemonManager.ViewModels
                     if (moddedInfo is null)
                     {
                         AppSettings.Default.SelectedApplicationId = string.Empty;
-                        await PromptHandler.Instance.PromptUser("Game Isn't Modded", "The selected game isn't modded with LemonLoader. Please select a different game or patch this game with the LemonInstaller.", PromptType.Notification);
+                        await PromptHandler.Instance.PromptUser("Unknown Application Type", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
+                    }
+                    if (!moddedInfo.IsModded)
+                    {
+                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", "This Unity game isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
+                            AppSettings.Default.SelectedApplicationId = string.Empty;
+                        else
+                        {
+                            ModManager.GamePatcherManager.PatchApp(moddedInfo);
+                        }
                     }
                     continue;
                 }

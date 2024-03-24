@@ -1,0 +1,3 @@
+[submodule "MelonLoaderInstaller"]
+	path = MelonLoaderInstaller
+	url = https://github.com/LemonLoader/MelonLoaderInstaller/
