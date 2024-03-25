@@ -3,6 +3,7 @@ using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using MelonLoaderInstaller.Core;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
@@ -18,15 +19,21 @@ namespace LemonManager.ModManager
 
         public static async void PatchApp(UnityApplicationInfoModel info)
         {
-            Logger.SetStatus("Patching application");
+            if (IsPatching) return;
             IsPatching = true;
+
+            Logger.SetStatus("Patching " + info.Id);
             try
             {
                 string cacheDirectory = ModManager.ApplicationLocator.GetLocalApplicationCache(info.Id);
                 string unityDependencyDirectory = Path.Combine(cacheDirectory, "UnityDeps.zip");
                 string melonLoaderDependencyDirectory = Path.Combine(cacheDirectory, "LemonInstallerDeps.zip");
+                string il2cpp_etc_path = await GetIL2CppEtc();
+                string outputApk = Path.Combine(cacheDirectory, "base.apk");
 
-                await DownloadInstallerDependencies(melonLoaderDependencyDirectory);
+                CleanFiles(unityDependencyDirectory, outputApk, melonLoaderDependencyDirectory); // just incase the process failed mid way through and this is a retry
+
+                DownloadInstallerDependencies(melonLoaderDependencyDirectory);
 
                 instance = new Patcher(new PatchArguments()
                 {
@@ -35,7 +42,7 @@ namespace LemonManager.ModManager
                     OutputApkDirectory = cacheDirectory,
 
                     UnityDependenciesPath = unityDependencyDirectory,
-                    Il2CppEtcPath = await GetIL2CppEtc(),
+                    Il2CppEtcPath = il2cpp_etc_path,
 
                     LemonDataPath = melonLoaderDependencyDirectory,
                     PackageName = info.Id,
@@ -46,17 +53,51 @@ namespace LemonManager.ModManager
                 Logger.Log("Starting patch process");
                 if (instance.Run())
                 {
+                    await InstallApk(info.Id, outputApk);
+
                     IsPatching = false;
                     info.IsModded = true; // technically not modded yet, soooooo
-
-
-                    Directory.Delete(cacheDirectory); // clean up
+                    Directory.Delete(cacheDirectory, true); // clean up
+                }
+                else
+                {
+                    Logger.Error("Something unexpected and unhandled happened while patching the game... uh oh");
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error(ex.ToString());
-                await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Confirmation);
+                await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Notification);
+            }
+        }
+
+        private static async Task InstallApk(string appId, string apkPath)
+        {
+            DeviceManager.SendShellCommand($"am force-stop {appId}"); // just incase its already running
+
+            bool isMetaQuest = DeviceManager.CurrentDevice.Model.StartsWith("Quest");
+            if (isMetaQuest)
+            {
+                DeviceManager.SendShellCommand($"am broadcast -a com.oculus.vrpowermanager.prox_close"); // prox_close
+            }
+
+            Logger.SetStatus("Uninstalling " + appId);
+            await DeviceManager.SendShellCommandAsync("pm uninstall -k " + appId);
+            Logger.SetStatus("Installing modded " + appId);
+            await DeviceManager.SendCommandAsync("install " + apkPath);
+
+            Logger.SetStatus("Starting game, this may take a while.");
+            Process.Start(new ProcessStartInfo(Path.Combine(FilePaths.ApplicationDataPath, "platform-tools", "adb.exe"))
+            {
+                WorkingDirectory = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools"),
+                Arguments = "logcat -v time MelonLoader:D CRASH:D Mono:D mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D funchook:D Unity:D Binder:D AndroidRuntime:D *:S" // https://github.com/LemonLoader/MelonLoader/wiki/Logging#realtime-logging
+            });
+            await DeviceManager.SendShellCommandAsync($"monkey -p " + appId);
+            DeviceManager.SendShellCommand("am force-stop " + appId);
+
+            if (isMetaQuest)
+            {
+                DeviceManager.SendShellCommand($"am broadcast -a com.oculus.vrpowermanager.automation_disable");
             }
         }
 
@@ -65,7 +106,7 @@ namespace LemonManager.ModManager
             string tempDir = Path.Combine(ApplicationLocator.GetLocalApplicationCache(appId), "supertempdir");
             if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
             Directory.CreateDirectory(tempDir);
-            ZipFile.ExtractToDirectory(localAPKPath, tempDir);
+            ZipFile.ExtractToDirectory(localAPKPath, tempDir, true);
 
             string globalGameManagersPath = Path.GetFullPath(tempDir + "/assets/bin/Data/globalgamemanagers");
             string assetFilePath = File.Exists(globalGameManagersPath) ? globalGameManagersPath : Path.GetFullPath(tempDir + "/assets/bin/Data/data.unity3d");
@@ -83,21 +124,39 @@ namespace LemonManager.ModManager
 
         private static async Task<string> GetIL2CppEtc()
         {
-            string outputFile = Path.Combine(FilePaths.ApplicationDataPath, "IL2CppEtc.zip");
+            string outputFile = Path.Combine(FilePaths.LemonCacheDirectory, "il2cpp_etc.zip");
             if (!File.Exists(outputFile))
             {
                 using WebClient webClient = new WebClient();
-                await webClient.DownloadFileTaskAsync("", outputFile);
+                await webClient.DownloadFileTaskAsync("https://raw.githubusercontent.com/CrafterBotOfficial/LemonManager/RemoteGamePatching/il2cpp_etc.zip", outputFile);
             }
             return outputFile;
         }
 
-        private static async Task DownloadInstallerDependencies(string outputFile)
+        private static void DownloadInstallerDependencies(string outputFile)
         {
+            Logger.SetStatus("Downloading LemonLoader & dependencies");
             const string Url = "https://github.com/LemonLoader/MelonLoader/releases/download/0.2.0/installer_deps_0.2.0.zip";
             using WebClient webClient = new WebClient();
 
-            await webClient.DownloadFileTaskAsync(Url, outputFile);
+            webClient.DownloadFile(Url, outputFile);
+            Logger.Log("Finished downloading!");
+        }
+
+        private static void CleanFiles(params string[] files)
+        {
+            foreach (var file in files)
+            {
+                try
+                {
+                    if (File.Exists(file)) File.Delete(file);
+                    else if (Directory.Exists(file)) Directory.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
+            }
         }
 
         public class PatcherhLoggerImplimentation : IPatchLogger

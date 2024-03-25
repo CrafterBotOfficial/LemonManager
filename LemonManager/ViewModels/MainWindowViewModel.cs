@@ -66,18 +66,18 @@ namespace LemonManager.ViewModels
                         if (moddedInfo is null)
                         {
                             AppSettings.Default.SelectedApplicationId = string.Empty;
-                            await PromptHandler.Instance.PromptUser("No", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
+                            await PromptHandler.Instance.PromptUser("Unrecognised Game", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
                             continue;
                         }
                     }
                     else
                     if (!moddedInfo.IsModded && !ModManager.GamePatcherManager.IsPatching)
                     {
-                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", "This Unity game isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
+                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", moddedInfo.Id + " isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
                             AppSettings.Default.SelectedApplicationId = string.Empty;
                         else
                         {
-                            await Task.Run(() => ModManager.GamePatcherManager.PatchApp(moddedInfo)); //.Start(ModManager.GamePatcherManager.PatchApp(moddedInfo));
+                            GamePatcherManager.PatchApp(moddedInfo);
                         }
                     }
                     continue;
@@ -124,6 +124,7 @@ namespace LemonManager.ViewModels
                 }
             }
         }
+
         #endregion
     }
 }
