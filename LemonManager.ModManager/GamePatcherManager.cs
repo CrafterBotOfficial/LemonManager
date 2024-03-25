@@ -5,7 +5,6 @@ using MelonLoaderInstaller.Core;
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -36,12 +35,13 @@ namespace LemonManager.ModManager
                     OutputApkDirectory = cacheDirectory,
 
                     UnityDependenciesPath = unityDependencyDirectory,
+                    Il2CppEtcPath = await GetIL2CppEtc(),
 
                     LemonDataPath = melonLoaderDependencyDirectory,
                     PackageName = info.Id,
 
                     UnityVersion = GetVersion(info.LocalAPKPath, info.Id) // for some reason the MelonInstaller's Unity version detector step dies, so Ima just do it here
-                }, new PatcherhLoggerImplimentation()); ;
+                }, new PatcherhLoggerImplimentation());
 
                 Logger.Log("Starting patch process");
                 if (instance.Run())
@@ -81,15 +81,15 @@ namespace LemonManager.ModManager
             return result;
         }
 
-        private static string GetIL2CppLibsPath(string apkPath)
+        private static async Task<string> GetIL2CppEtc()
         {
-            using Stream stream = File.OpenRead(apkPath);
-            using ZipArchive archive = new ZipArchive(stream);
-
-            var libUnityEntry = archive.Entries.Single(entry => entry.Name == "libunity.so");
-            var path = libUnityEntry.FullName.Split('\\', '/').ToList();
-            path.Remove(libUnityEntry.Name);
-            return string.Join('/', path);
+            string outputFile = Path.Combine(FilePaths.ApplicationDataPath, "IL2CppEtc.zip");
+            if (!File.Exists(outputFile))
+            {
+                using WebClient webClient = new WebClient();
+                await webClient.DownloadFileTaskAsync("", outputFile);
+            }
+            return outputFile;
         }
 
         private static async Task DownloadInstallerDependencies(string outputFile)
