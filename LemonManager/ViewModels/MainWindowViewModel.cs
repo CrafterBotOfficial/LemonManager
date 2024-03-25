@@ -55,24 +55,29 @@ namespace LemonManager.ViewModels
 
             if (forceNewSelection) AppSettings.Default.SelectedApplicationId = string.Empty;
 
-            UnityApplicationInfoModel moddedInfo = null;
-            while (moddedInfo is null)
+            UnityApplicationInfoModel? moddedInfo = null;
+            while (moddedInfo is null || ((moddedInfo?.IsModded).HasValue && (!moddedInfo?.IsModded).Value))
             {
                 if (apps.TryGetValue(AppSettings.Default.SelectedApplicationId, out var appInfo))
                 {
-                    moddedInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
                     if (moddedInfo is null)
                     {
-                        AppSettings.Default.SelectedApplicationId = string.Empty;
-                        await PromptHandler.Instance.PromptUser("Unknown Application Type", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
+                        moddedInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
+                        if (moddedInfo is null)
+                        {
+                            AppSettings.Default.SelectedApplicationId = string.Empty;
+                            await PromptHandler.Instance.PromptUser("No", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
+                            continue;
+                        }
                     }
-                    if (!moddedInfo.IsModded)
+                    else
+                    if (!moddedInfo.IsModded && !ModManager.GamePatcherManager.IsPatching)
                     {
                         if (!await PromptHandler.Instance.PromptUser("Patch Game?", "This Unity game isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
                             AppSettings.Default.SelectedApplicationId = string.Empty;
                         else
                         {
-                            ModManager.GamePatcherManager.PatchApp(moddedInfo);
+                            await Task.Run(() => ModManager.GamePatcherManager.PatchApp(moddedInfo)); //.Start(ModManager.GamePatcherManager.PatchApp(moddedInfo));
                         }
                     }
                     continue;

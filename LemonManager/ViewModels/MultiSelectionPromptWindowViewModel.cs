@@ -4,23 +4,27 @@ using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-namespace LemonManager.ViewModels;
-
-public class MultiSelectionPromptWindowViewModel : ViewModelBase
+namespace LemonManager.ViewModels
 {
-    public string Title { get; set; }
-    public ObservableCollection<string> Options { get; set; } = new ObservableCollection<string>();
-    public ICommand SubmitCommand { get; set; }
 
-    public int SelectedIndex { get; set; }
-
-    public MultiSelectionPromptWindowViewModel(Window window, string title, params string[] options)
+    public class MultiSelectionPromptWindowViewModel : ViewModelBase
     {
-        Title = title;
-        Options.AddRange(options);
-        SubmitCommand = ReactiveCommand.Create(() =>
+        public string Title { get; set; }
+        public ObservableCollection<string> Options { get; set; } = new ObservableCollection<string>();
+        public ICommand SubmitCommand { get; set; }
+        public int SelectedIndex { get; set; }
+
+        public Window Window;
+
+        public MultiSelectionPromptWindowViewModel(Window window, string title, params string[] options)
         {
-            window.Close(SelectedIndex);
-        });
+            Title = title;
+            Window = window;
+            Options.AddRange(options);
+            SubmitCommand = ReactiveCommand.Create(() =>
+            {
+                window.Close(SelectedIndex);
+            });
+        }
     }
 }

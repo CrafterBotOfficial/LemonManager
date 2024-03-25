@@ -2,48 +2,50 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace LemonManager.ModManager;
-
-public static class Logger
+namespace LemonManager.ModManager
 {
-    public static string LogPath => Path.Combine(FilePaths.ApplicationDataPath, "Log.txt");
-    private static StreamWriter streamWriter;
 
-    static Logger()
+    public static class Logger
     {
-        string prevFilePath = Path.Combine(FilePaths.ApplicationDataPath, "Log-prev.txt");
+        public static string LogPath => Path.Combine(FilePaths.ApplicationDataPath, "Log.txt");
+        private static StreamWriter streamWriter;
 
-        if (File.Exists(prevFilePath)) File.Delete(prevFilePath);
-        if (File.Exists(LogPath)) File.Move(LogPath, prevFilePath);
-        streamWriter = new(File.Create(LogPath));
-    }
+        static Logger()
+        {
+            string prevFilePath = Path.Combine(FilePaths.ApplicationDataPath, "Log-prev.txt");
 
-    public static void Log(object message)
-    {
-        WriteLine("[Info] " + message);
-    }
+            if (File.Exists(prevFilePath)) File.Delete(prevFilePath);
+            if (File.Exists(LogPath)) File.Move(LogPath, prevFilePath);
+            streamWriter = new(File.Create(LogPath));
+        }
 
-    public static void Warning(object message)
-    {
-        WriteLine("[Warning] " + message);
-    }
+        public static void Log(object message)
+        {
+            WriteLine("[Info] " + message);
+        }
 
-    public static void Error(object message)
-    {
-        WriteLine("[Error] " + message);
-    }
+        public static void Warning(object message)
+        {
+            WriteLine("[Warning] " + message);
+        }
 
-    public static void SetStatus(string status)
-    {
-        Log("[Status] " + status);
-        ServerManager.PromptHandler.SetStatus(status);
-    }
+        public static void Error(object message)
+        {
+            WriteLine("[Error] " + message);
+        }
+
+        public static void SetStatus(string status)
+        {
+            Log("[Status] " + status);
+            ServerManager.PromptHandler.SetStatus(status);
+        }
 
 
-    private static void WriteLine(object line)
-    {
-        Debug.WriteLine(line);
-        streamWriter.WriteLine(line);
-        streamWriter.Flush();
+        private static void WriteLine(object line)
+        {
+            Debug.WriteLine(line);
+            streamWriter.WriteLine(line);
+            streamWriter.Flush();
+        }
     }
 }
