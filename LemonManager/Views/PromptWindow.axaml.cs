@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace LemonManager.Views;
-
-public partial class PromptWindow : Window
+namespace LemonManager.Views
 {
-    public PromptWindow()
+
+    public partial class PromptWindow : Window
     {
-        InitializeComponent();
+        public PromptWindow()
+        {
+            InitializeComponent();
+        }
     }
 }

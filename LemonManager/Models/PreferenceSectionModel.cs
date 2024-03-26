@@ -1,16 +1,18 @@
 ﻿using DynamicData;
 using System.Collections.ObjectModel;
 
-namespace LemonManager.Models;
-
-public class PreferenceSectionModel
+namespace LemonManager.Models
 {
-    public string Name { get; set; }
-    public ObservableCollection<PreferenceEntryModel> Entries { get; set; } = new ObservableCollection<PreferenceEntryModel>();
 
-    public PreferenceSectionModel(string name, PreferenceEntryModel[] entries)
+    public class PreferenceSectionModel
     {
-        Name = name.Replace("\"", string.Empty);
-        Entries.AddRange(entries);
+        public string Name { get; set; }
+        public ObservableCollection<PreferenceEntryModel> Entries { get; set; } = new ObservableCollection<PreferenceEntryModel>();
+
+        public PreferenceSectionModel(string name, PreferenceEntryModel[] entries)
+        {
+            Name = name.Replace("\"", string.Empty);
+            Entries.AddRange(entries);
+        }
     }
 }

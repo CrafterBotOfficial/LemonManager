@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 
-namespace LemonManager.ModManager.MelonPreferences.Models;
-
-public class MelonPreferenceSection
+namespace LemonManager.ModManager.MelonPreferences.Models
 {
-    public string Name { get; }
-    public Dictionary<string, (string value, string comment)> Values { get; set; }
 
-    internal MelonPreferenceSection(string name)
+    public class MelonPreferenceSection
     {
-        Name = name;
-        Values = new();
+        public string Name { get; }
+        public Dictionary<string, (string value, string comment)> Values { get; set; }
+
+        internal MelonPreferenceSection(string name)
+        {
+            Name = name;
+            Values = new();
+        }
     }
 }

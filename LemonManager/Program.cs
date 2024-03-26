@@ -2,27 +2,29 @@
 using Avalonia.ReactiveUI;
 using System;
 
-namespace LemonManager;
-
-internal class Program
+namespace LemonManager
 {
-    [STAThread]
-    public static void Main(string[] args)
+
+    internal class Program
     {
-        AppDomain.CurrentDomain.UnhandledException += async (sender, arg) =>
+        [STAThread]
+        public static void Main(string[] args)
         {
-            ModManager.Logger.Error("Unhandled exception " + arg);
-            await PromptHandler.Instance?.PromptUser("Unhandled Exception", "The application ran into something unexpected, please report the problem on Github.", ModManager.PromptType.Notification);
-        };
+            AppDomain.CurrentDomain.UnhandledException += async (sender, arg) =>
+            {
+                ModManager.Logger.Error("Unhandled exception " + arg);
+                await PromptHandler.Instance?.PromptUser("Unhandled Exception", "The application ran into something unexpected, please report the problem on Github.", ModManager.PromptType.Notification);
+            };
 
-        BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+            BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
+        }
+
+        public static AppBuilder BuildAvaloniaApp()
+            => AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .WithInterFont()
+                .LogToTrace()
+                .UseReactiveUI();
     }
-
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace()
-            .UseReactiveUI();
 }

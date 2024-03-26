@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace LemonManager.Views;
-
-public partial class LemonListView : UserControl
+namespace LemonManager.Views
 {
-    public LemonListView()
+
+    public partial class LemonListView : UserControl
     {
-        InitializeComponent();
+        public LemonListView()
+        {
+            InitializeComponent();
+        }
     }
 }

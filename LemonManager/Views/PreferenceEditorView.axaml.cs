@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace LemonManager.Views;
-
-public partial class PreferenceEditorView : UserControl
+namespace LemonManager.Views
 {
-    public PreferenceEditorView()
+
+    public partial class PreferenceEditorView : UserControl
     {
-        InitializeComponent();
+        public PreferenceEditorView()
+        {
+            InitializeComponent();
+        }
     }
 }

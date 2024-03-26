@@ -1,15 +1,17 @@
 ﻿using LemonManager.ModManager.AndroidDebugBridge;
 
-namespace LemonManager.ModManager.Models;
-
-public class DeviceInfo
+namespace LemonManager.ModManager.Models
 {
-    public string Id;
-    public string Model;
 
-    public DeviceInfo(DeviceManager.Device device)
+    public class DeviceInfo
     {
-        Id = device.Id;
-        Model = device.Model;
+        public string Id;
+        public string Model;
+
+        public DeviceInfo(DeviceManager.Device device)
+        {
+            Id = device.Id;
+            Model = device.Model;
+        }
     }
 }

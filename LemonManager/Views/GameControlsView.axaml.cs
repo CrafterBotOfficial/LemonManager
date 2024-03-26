@@ -3,12 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 
-namespace LemonManager.Views;
-
-public partial class GameControlsView : UserControl
+namespace LemonManager.Views
 {
-    public GameControlsView()
+
+    public partial class GameControlsView : UserControl
     {
-        InitializeComponent();
+        public GameControlsView()
+        {
+            InitializeComponent();
+        }
     }
 }

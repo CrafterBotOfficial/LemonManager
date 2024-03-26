@@ -1,18 +1,20 @@
 ﻿using System.Threading.Tasks;
 
-namespace LemonManager.ModManager;
-
-public interface IPromptHandler
+namespace LemonManager.ModManager
 {
-    public Task<bool> PromptUser(string title, string message, PromptType type);
-    public Task<int> PromptUser(string title, params string[] options);
-    public void UpdateMultiSelectionPrompt(string target, params string[] options);
 
-    public void SetStatus(string status);
-}
+    public interface IPromptHandler
+    {
+        public Task<bool> PromptUser(string title, string message, PromptType type);
+        public Task<int> PromptUser(string title, params string[] options);
+        public void UpdateMultiSelectionPrompt(string target, params string[] options);
 
-public enum PromptType
-{
-    Notification,
-    Confirmation,
+        public void SetStatus(string status);
+    }
+
+    public enum PromptType
+    {
+        Notification,
+        Confirmation,
+    }
 }
