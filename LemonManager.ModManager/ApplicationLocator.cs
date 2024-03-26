@@ -18,7 +18,7 @@ public static class ApplicationLocator
 
     public static Dictionary<string, ApplicationInfo> GetApplications()
     {
-        string[] lines = DeviceManager.SendShellCommand("pm list packages -f").Split('\n');
+        string[] lines = DeviceManager.SendShellCommand("cmd package list packages -f -3").Split('\n');
         Dictionary<string, ApplicationInfo> infos = new Dictionary<string, ApplicationInfo>(lines.Length);
         for (int i = 0; i < lines.Length; i++)
         {
@@ -31,8 +31,6 @@ public static class ApplicationLocator
             }
 
             string id = match.Groups[2].Value;
-            if (id.StartsWith("com.oculus") || id.StartsWith("com.android")) continue;
-
             infos.Add(id, new ApplicationInfo(match.Groups[1].Value + ".apk", id));
         }
         Logger.Log($"Found {infos.Count} packages");

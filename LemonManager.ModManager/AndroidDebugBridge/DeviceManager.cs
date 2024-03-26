@@ -93,7 +93,7 @@ public static class DeviceManager
             {
                 var devices = await GetDevices();
                 if (deviceCount != devices.Length) onDevicesChanged(devices);
-                await Task.Delay(2500);
+                await Task.Delay(1500);
             }
             catch (Exception ex)
             {
