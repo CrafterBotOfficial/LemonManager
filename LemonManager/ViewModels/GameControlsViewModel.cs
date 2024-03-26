@@ -36,7 +36,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         });
     }
 
-    private void Logcat()
+    public void Logcat()
     {
         string adbPath = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools", "adb.exe");
 
@@ -48,7 +48,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         });
     }
 
-    private void ClearLemonCache()
+    public void ClearLemonCache()
     {
         try
         {
@@ -60,7 +60,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         }
     }
 
-    private async void ClearRemoteMelonLogs()
+    public async void ClearRemoteMelonLogs()
     {
         string remoteLogDirectory = moddedApplication.RemoteDataPath + "/melonloader/etc/logs/";
         if (!await PromptHandler.Instance.PromptUser("Are You Sure?", $"If you continue all MelonLoader log files located in the game's MelonLoader log directory will be deleted.", PromptType.Confirmation))
@@ -78,7 +78,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         await PromptHandler.Instance.PromptUser("Success", "Purged all files ending with .log in melon log directory.", PromptType.Notification);
     }
 
-    private bool StartStopGame()
+    public bool StartStopGame()
     {
         string packageName = MainWindowViewModel.Instance.ApplicationManager.Info.Id;
         bool isRunning = DeviceManager.SendShellCommand("pidof " + packageName) != string.Empty;
@@ -95,7 +95,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         return !isRunning;
     }
 
-    private async void DownloadGameData()
+    public async void DownloadGameData()
     {
         var dialog = new OpenFolderDialog();
         var result = Path.GetFullPath((await dialog.ShowAsync(MainWindow.Instance)) ?? Directory.GetCurrentDirectory());
@@ -105,7 +105,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         await PromptHandler.Instance.PromptUser("Success", $"Successfully downloaded {moddedApplication.Id}'s data.", PromptType.Notification);
     }
 
-    private async void DownloadHeaderFiles()
+    public async void DownloadHeaderFiles()
     {
         try
         {
@@ -124,7 +124,7 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         }
     }
 
-    private async void ChangeApplication()
+    public async void ChangeApplication()
     {
         MainWindowViewModel.LoadingStatus = "Changing application";
         MainWindowViewModel.IsLoading = true;
@@ -134,7 +134,8 @@ public class GameControlsViewModel : ViewModelBase, INotifyPropertyChanged
         MainWindowViewModel.IsLoading = false;
     }
 
-    private const string ApplicationInfoTemplate =
+    // TODO: add melonloader version
+    public const string ApplicationInfoTemplate =
         "PackageName: {0}\n" +
         "Version: {1}\n" +
         "Unity Version: {2}\n" +

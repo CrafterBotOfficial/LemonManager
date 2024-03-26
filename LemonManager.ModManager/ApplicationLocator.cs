@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -66,6 +65,7 @@ public static class ApplicationLocator
                 Il2CppVersion = GetIL2CppVersion(zipArchive.GetEntry("assets/bin/Data/Managed/Metadata/global-metadata.dat")) ?? "UNKNOWN", // unkown if mono
 
                 IsModded = zipArchive.Entries.Any(entry => entry.Name == "MelonLoader.dll"),
+                MelonLoaderInitialized = await MelonLoaderInitialized(info.Id),
 
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
@@ -92,6 +92,7 @@ public static class ApplicationLocator
         return localAPK;
     }
 
+    // TODO: convert to assettool now that its been added to the project
     private static string GetUnityVersion(ZipArchive archive)
     {
         try
@@ -138,6 +139,12 @@ public static class ApplicationLocator
         uint versionNumber = BitConverter.ToUInt32(buffer, 4);
         Logger.Log("Il2Cpp version " + versionNumber);
         return versionNumber.ToString();
+    }
+
+    private static async Task<bool> MelonLoaderInitialized(string appId)
+    {
+        string melonloaderPath = string.Format(FilePaths.RemoteApplicationDataPath, appId) + "/melonloader/";
+        return await DeviceManager.RemoteDirectoryExists(melonloaderPath);
     }
 
     private static byte[] GetBytes(ZipArchiveEntry entry)

@@ -23,6 +23,7 @@ namespace LemonManager.ViewModels
         public PreferenceEditorViewModel PreferenceEditorView { get; } = new PreferenceEditorViewModel();
 
         public ICommand ChangeApplicationCommand { get; set; }
+        public ICommand StartGameCommand { get; set; }
 
         public bool HasIcon => AppIcon is object;
         public Bitmap AppIcon { get; set; }
@@ -31,6 +32,10 @@ namespace LemonManager.ViewModels
         {
             Instance = this;
             ChangeApplicationCommand = ReactiveCommand.Create(async () => await SelectApplication(true));
+            StartGameCommand = ReactiveCommand.Create(() => {
+                GameControlsView.Logcat();
+                GameControlsView.StartStopGame();
+            });
             Task.Run(Init);
         }
 
@@ -84,7 +89,17 @@ namespace LemonManager.ViewModels
                 }
                 AppSettings.Default.SelectedApplicationId = apps.ElementAt(await PromptHandler.Instance.PromptUser("Select a Application", apps.Select(app => app.Key).ToArray())).Key;
             }
+
             ApplicationManager = new ApplicationManager(moddedInfo);
+            if (!moddedInfo.MelonLoaderInitialized)
+            {
+                IsLoading = false;
+                ShowMelonNotReady = true;
+                this.RaisePropertyChanged(nameof(IsLoading));
+                this.RaisePropertyChanged(nameof(ShowMelonNotReady));
+                return;
+            }
+
             PreferenceEditorView.Init(ApplicationManager.Info.Id);
             AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
             this.RaisePropertyChanged(nameof(AppIcon));
@@ -126,5 +141,8 @@ namespace LemonManager.ViewModels
         }
 
         #endregion
+
+        public bool ShowMelonNotReady { get; set; }
+        public bool ShowLemonManager => !ShowMelonNotReady && !ShowLoadingView;
     }
 }

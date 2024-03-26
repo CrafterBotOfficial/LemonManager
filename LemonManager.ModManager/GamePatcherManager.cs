@@ -68,6 +68,7 @@ namespace LemonManager.ModManager
             {
                 Logger.Error(ex.ToString());
                 await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Notification);
+                Environment.Exit(0);
             }
         }
 

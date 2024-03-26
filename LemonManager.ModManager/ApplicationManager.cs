@@ -24,7 +24,7 @@ public class ApplicationManager
     }
 
     public async Task<LemonInfo[]> GetLemons(bool plugins)
-    {
+    {   
         Logger.Log("Getting Lemons");
         await LoadMelonLoaderAssembly();
 

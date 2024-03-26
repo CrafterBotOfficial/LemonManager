@@ -37,6 +37,9 @@ public static class DeviceManager
     public static async Task Push(string localFile, string remoteFile) =>
         await SendCommandAsync($"push {localFile} {remoteFile}");
 
+    public static async Task<bool> RemoteDirectoryExists(string remotePath) =>
+       (await SendShellCommandAsync($"if [ -e {remotePath} ]; then echo \"exists\"; else echo \"not exists\"; fi")) == "exists";
+
     public static string[] GetFiles(string remotePath)
     {
         return SendShellCommand($"ls -m {remotePath}").Split('\n', ',').Select(x => x.Trim().Insert(0, remotePath + "/").Trim()).ToArray();

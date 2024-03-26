@@ -24,7 +24,13 @@
       <TextBlock Text="{Binding Status}"/>
     </StackPanel>
 
-    <StackPanel Margin="20" IsVisible="{Binding !ShowLoadingView}">
+    <StackPanel IsVisible="{Binding ShowMelonNotReady}">
+      <TextBlock>This game hasn't been ran yet, therefor LemonLoader isn't ready yet.</TextBlock>
+      <Button Command="{Binding StartGameCommand}">Start Game</Button>
+    </StackPanel>
+
+    <StackPanel Margin="20"
+                IsVisible="{Binding ShowLemonManager}">
       <Panel>
         <TextBlock FontSize="30">LemonManager</TextBlock>
         <Image Height="45" Width="45"
