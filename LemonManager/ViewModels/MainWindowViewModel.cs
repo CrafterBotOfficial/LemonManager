@@ -66,16 +66,16 @@ namespace LemonManager.ViewModels
 
             if (forceNewSelection) AppSettings.Default.SelectedApplicationId = string.Empty;
 
-            UnityApplicationInfoModel? moddedInfo = null;
-            while (moddedInfo is null || ((moddedInfo?.IsModded).HasValue && (!moddedInfo?.IsModded).Value))
+            UnityApplicationInfoModel? unityInfo = null;
+            while (unityInfo is null || ((unityInfo?.IsModded).HasValue && (!unityInfo?.IsModded).Value))
             {
                 await Task.Delay(10);
                 if (apps.TryGetValue(AppSettings.Default.SelectedApplicationId, out var appInfo))
                 {
-                    if (moddedInfo is null)
+                    if (unityInfo is null)
                     {
-                        moddedInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
-                        if (moddedInfo is null)
+                        unityInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
+                        if (unityInfo is null)
                         {
                             AppSettings.Default.SelectedApplicationId = string.Empty;
                             await PromptHandler.Instance.PromptUser("Unrecognised Game", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
@@ -83,14 +83,17 @@ namespace LemonManager.ViewModels
                         }
                     }
                     else
-                    if (!moddedInfo.IsModded && !ModManager.GamePatcherManager.IsPatching)
+                    if (!unityInfo.IsModded && !ModManager.GamePatcherManager.IsPatching)
                     {
-                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", moddedInfo.Id + " isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
+                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", unityInfo.Id + " isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
+                        {
                             AppSettings.Default.SelectedApplicationId = string.Empty;
+                            unityInfo = null;
+                        }
                         else
                         {
                             GamePatcherManager.IsPatching = true;
-                            Task.Run(async () => GamePatcherManager.PatchApp(moddedInfo));
+                            Task.Run(async () => GamePatcherManager.PatchApp(unityInfo));
                         }
                     }
                     continue;
@@ -98,8 +101,8 @@ namespace LemonManager.ViewModels
                 AppSettings.Default.SelectedApplicationId = apps.ElementAt(await PromptHandler.Instance.PromptUser("Select a Application", apps.Select(app => app.Key).ToArray())).Key;
             }
 
-            ApplicationManager = new ApplicationManager(moddedInfo);
-            if (!moddedInfo.MelonLoaderInitialized)
+            ApplicationManager = new ApplicationManager(unityInfo);
+            if (!unityInfo.MelonLoaderInitialized)
             {
                 ShowMelonNotReady = true;
                 this.RaisePropertyChanged(nameof(ShowMelonNotReady));

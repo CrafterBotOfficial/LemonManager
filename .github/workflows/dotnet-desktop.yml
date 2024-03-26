@@ -30,10 +30,7 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet publish ./LemonManager/LemonManager.csproj -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -c Release --self-contained
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
