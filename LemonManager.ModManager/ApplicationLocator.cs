@@ -93,7 +93,7 @@ public static class ApplicationLocator
     }
 
     // TODO: convert to assettool now that its been added to the project
-    private static string GetUnityVersion(ZipArchive archive)
+    public static string GetUnityVersion(ZipArchive archive)
     {
         try
         {
@@ -109,7 +109,6 @@ public static class ApplicationLocator
             using (BinaryReader reader = new BinaryReader(memoryStream))
             {
                 string version = Encoding.Default.GetString(reader.ReadBytes(11));
-                Logger.Log("Detected Unity version " + version);
                 return version;
             }
         }

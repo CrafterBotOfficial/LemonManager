@@ -1,4 +1,5 @@
-﻿using AssetsTools.NET.Extra;
+﻿using AssetsTools.NET;
+using AssetsTools.NET.Extra;
 using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using MelonLoaderInstaller.Core;
@@ -31,6 +32,9 @@ namespace LemonManager.ModManager
                 string il2cpp_etc_path = await GetIL2CppEtc();
                 string outputApk = Path.Combine(cacheDirectory, "base.apk");
 
+                var unityVersion = GetVersion(info.LocalAPKPath); // for some reason the MelonInstaller's Unity version detector step dies, so Ima just do it here
+                Logger.Log("Parsed Unity version: " + unityVersion);
+
                 CleanFiles(unityDependencyDirectory, outputApk, melonLoaderDependencyDirectory); // just incase the process failed mid way through and this is a retry
 
                 DownloadInstallerDependencies(melonLoaderDependencyDirectory);
@@ -47,7 +51,7 @@ namespace LemonManager.ModManager
                     LemonDataPath = melonLoaderDependencyDirectory,
                     PackageName = info.Id,
 
-                    UnityVersion = GetVersion(info.LocalAPKPath, info.Id) // for some reason the MelonInstaller's Unity version detector step dies, so Ima just do it here
+                    UnityVersion = unityVersion
                 }, new PatcherhLoggerImplimentation());
 
                 Logger.Log("Starting patch process");
@@ -86,9 +90,20 @@ namespace LemonManager.ModManager
             await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Modded APK Installed", "You must run your game once before being able to install any lemons. The first time you run the game it may take sevral minutes to start.", PromptType.Notification);
         }
 
-        private static AssetRipper.Primitives.UnityVersion GetVersion(string localAPKPath, string appId)
+        private static AssetRipper.Primitives.UnityVersion GetVersion(string localApk)
         {
-            string tempDir = Path.Combine(ApplicationLocator.GetLocalApplicationCache(appId), "supertempdir");
+            using ZipArchive archive = ZipFile.OpenRead(localApk);
+            /*string globalGameManagersPath = "/assets/bin/Data/globalgamemanagers";
+            bool gGMExists = archive.GetEntry(globalGameManagersPath) is object;
+            string assetFilePath = gGMExists ? globalGameManagersPath : "/assets/bin/Data/data.unity3d";
+
+            using Stream stream = archive.GetEntry(assetFilePath).Open();
+            byte[] versionBuffer = new byte[11];
+            stream.Read(versionBuffer, gGMExists ? 0x14 : 0x12, versionBuffer.Length);
+*/
+            return AssetRipper.Primitives.UnityVersion.Parse(ApplicationLocator.GetUnityVersion(archive));
+
+            /*string tempDir = Path.Combine(ApplicationLocator.GetLocalApplicationCache(appId), "supertempdir");
             if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
             Directory.CreateDirectory(tempDir);
             ZipFile.ExtractToDirectory(localAPKPath, tempDir, true);
@@ -104,7 +119,7 @@ namespace LemonManager.ModManager
                 result = AssetRipper.Primitives.UnityVersion.Parse(assetFile.file.Metadata.UnityVersion);
                 Logger.Log(result);
             }
-            return result;
+            return result;*/
         }
 
         private static async Task<string> GetIL2CppEtc()
