@@ -27,6 +27,8 @@ namespace LemonManager.ViewModels
         public ICommand ChangeApplicationCommand { get; set; }
         public ICommand StartGameCommand { get; set; }
 
+        public bool ShowStartGameButton { get; set; } = true;
+
         public bool HasIcon => AppIcon is object;
         public Bitmap AppIcon { get; set; }
 
@@ -38,6 +40,7 @@ namespace LemonManager.ViewModels
             {
                 GameControlsView.Logcat();
                 GameControlsView.StartStopGame();
+                ShowStartGameButton = false;
             });
             Task.Run(Init);
         }

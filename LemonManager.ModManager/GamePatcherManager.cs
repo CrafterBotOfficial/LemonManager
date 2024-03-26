@@ -65,7 +65,11 @@ namespace LemonManager.ModManager
                         info.IsModded = true;
                         Directory.Delete(cacheDirectory, true); // clean up
                     }
-                    else Logger.SetStatus("Finished!\nModded APK:\n" + outputApk);
+                    else
+                    {
+                        CleanFiles(melonLoaderDependencyDirectory, unityDependencyDirectory, il2cpp_etc_path, info.LocalAPKPath); // the local apk is the unmodded one: "base.apk.zip"
+                        Logger.SetStatus("Finished!\nModded APK:\n" + outputApk);
+                    }
                 }
                 else
                 {
@@ -75,7 +79,7 @@ namespace LemonManager.ModManager
             catch (Exception ex)
             {
                 Logger.Error(ex.ToString());
-                await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Notification);
+                await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, try deleting the LemonManager data folder. If that doesn't work please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Notification);
                 Environment.Exit(1);
             }
         }
@@ -84,6 +88,8 @@ namespace LemonManager.ModManager
         {
             DeviceManager.SendShellCommand($"am force-stop {appInfo.Id}"); // just incase its already running
             if (!await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Install Modded APK?", "Are you sure you want to proceed, your game may become unplayable if the process fails. All game data WILL be lost!", PromptType.Confirmation))
+                return false;
+            if (!await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Are You Positive?", "All game data WILL be lost! You CAN use Sidequest to make a backup before you proceed.", PromptType.Confirmation))
                 return false;
 
             // const string RemoteTempAPKPath = FilePaths.RemoteLemonManagerDataDirectory + "/temp.apk";

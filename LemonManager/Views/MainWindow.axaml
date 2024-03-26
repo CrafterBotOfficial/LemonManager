@@ -28,8 +28,10 @@
     <!-- MelonLoader Initialization helper -->
     <StackPanel IsVisible="{Binding ShowMelonNotReady}"
                 HorizontalAlignment="Center" VerticalAlignment="Center">
-      <TextBlock>This game hasn't been ran yet, therefor LemonLoader isn't ready yet.</TextBlock>
-      <Button Command="{Binding StartGameCommand}">Start Game</Button>
+      <TextBlock IsVisible="{Binding ShowStartGameButton}">This game hasn't been ran yet, therefor LemonLoader isn't ready yet.</TextBlock>
+      <TextBlock IsVisible="{Binding !ShowStartGameButton}">Game is starting, this may take awhile, but once its complete the game will be ready to use.</TextBlock>
+      <Button Command="{Binding StartGameCommand}"
+              IsVisible="{Binding ShowStartGameButton}">Start Game</Button>
     </StackPanel>
 
     <!-- Mod manager & utilities view holder -->
