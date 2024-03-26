@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -92,28 +93,29 @@ public static class ApplicationLocator
         return localAPK;
     }
 
-    // TODO: convert to assettool now that its been added to the project
     public static string GetUnityVersion(ZipArchive archive)
     {
         try
         {
-            bool dataUnity3dExists = archive.Entries.Any(entry => entry.Name == "data.unity3d");
-            var entry = archive.GetEntry("assets/bin/Data/" + (dataUnity3dExists ? "data.unity3d" : "globalgamemanagers"));
+            string globalGameManagersPath = "assets/bin/Data/globalgamemanagers";
+            ZipArchiveEntry globalGameManagersEntry = archive.GetEntry(globalGameManagersPath);
+            var assetFileEntry = globalGameManagersEntry is object ? globalGameManagersEntry : archive.GetEntry("assets/bin/Data/data.unity3d");
 
-            Logger.Log("Extracting unity version");
-            using Stream stream = entry.Open();
+            using Stream stream = assetFileEntry.Open();
             using MemoryStream memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
 
-            memoryStream.Position = dataUnity3dExists ? 0x12 : 0x14;
-            using (BinaryReader reader = new BinaryReader(memoryStream))
-            {
-                string version = Encoding.Default.GetString(reader.ReadBytes(11));
-                return version;
-            }
+            memoryStream.Position = globalGameManagersEntry is object ? 0x14 : 0x12;
+            byte[] versionBuffer = new byte[11];
+            memoryStream.Read(versionBuffer, 0, versionBuffer.Length);
+
+            string unityVersion = Encoding.UTF8.GetString(versionBuffer);
+            Logger.Log("Unity version from asset file: " + unityVersion);
+            return unityVersion;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Error(ex);
             return null;
         }
     }
@@ -143,6 +145,7 @@ public static class ApplicationLocator
     private static async Task<bool> MelonLoaderInitialized(string appId)
     {
         string melonloaderPath = string.Format(FilePaths.RemoteApplicationDataPath, appId) + "/melonloader/";
+        Logger.Log("Checking remote directory for melonloader: " + melonloaderPath);
         return await DeviceManager.RemoteDirectoryExists(melonloaderPath);
     }
 

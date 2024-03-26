@@ -1,13 +1,11 @@
-﻿using AssetsTools.NET;
-using AssetsTools.NET.Extra;
-using LemonManager.ModManager.AndroidDebugBridge;
+﻿using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
 using MelonLoaderInstaller.Core;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LemonManager.ModManager
@@ -20,10 +18,8 @@ namespace LemonManager.ModManager
 
         public static async void PatchApp(UnityApplicationInfoModel info)
         {
-            if (IsPatching) return;
-            IsPatching = true;
-
             Logger.SetStatus("Patching " + info.Id);
+            Logger.Log("Thread: " + Thread.CurrentThread.ManagedThreadId);
             try
             {
                 string cacheDirectory = ModManager.ApplicationLocator.GetLocalApplicationCache(info.Id);
@@ -33,7 +29,12 @@ namespace LemonManager.ModManager
                 string outputApk = Path.Combine(cacheDirectory, "base.apk");
 
                 var unityVersion = GetVersion(info.LocalAPKPath); // for some reason the MelonInstaller's Unity version detector step dies, so Ima just do it here
-                Logger.Log("Parsed Unity version: " + unityVersion);
+                if (unityVersion == AssetRipper.Primitives.UnityVersion.MinVersion)
+                {
+                    Logger.Error("Failed to parse Unity version, aborting.");
+                    await ServerManager.PromptHandler.PromptUser("Failed Patching", "Failed to parse Unity version, please try to patch the game with the Android MelonInstaller application instead.", PromptType.Notification);
+                    Environment.Exit(1);
+                }
 
                 CleanFiles(unityDependencyDirectory, outputApk, melonLoaderDependencyDirectory); // just incase the process failed mid way through and this is a retry
 
@@ -52,16 +53,19 @@ namespace LemonManager.ModManager
                     PackageName = info.Id,
 
                     UnityVersion = unityVersion
-                }, new PatcherhLoggerImplimentation());
+                }, new PatcherLoggerImplimentation());
 
                 Logger.Log("Starting patch process");
                 if (instance.Run())
                 {
-                    await InstallApk(info.Id, outputApk);
-
-                    IsPatching = false;
-                    info.IsModded = true; // technically not modded yet, soooooo
-                    Directory.Delete(cacheDirectory, true); // clean up
+                    Logger.Log("Patching completed");
+                    if (await InstallApk(info, outputApk))
+                    {
+                        IsPatching = false;
+                        info.IsModded = true;
+                        Directory.Delete(cacheDirectory, true); // clean up
+                    }
+                    else Logger.SetStatus("Finished!\nModded APK:\n" + outputApk);
                 }
                 else
                 {
@@ -72,54 +76,51 @@ namespace LemonManager.ModManager
             {
                 Logger.Error(ex.ToString());
                 await ServerManager.PromptHandler.PromptUser("FUCK", "Failed to patch application, please open a Github issue and send the log file located in the LemonManager local storage directory.", PromptType.Notification);
-                Environment.Exit(0);
+                Environment.Exit(1);
             }
         }
 
-        private static async Task InstallApk(string appId, string apkPath)
+        private static async Task<bool> InstallApk(UnityApplicationInfoModel appInfo, string moddedAPKPath)
         {
-            DeviceManager.SendShellCommand($"am force-stop {appId}"); // just incase its already running
-            if (!await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Install Modded APK?", "Are you sure you want to proceed, your game may become unplayable if the process fails.", PromptType.Confirmation))
-                return;
+            DeviceManager.SendShellCommand($"am force-stop {appInfo.Id}"); // just incase its already running
+            if (!await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Install Modded APK?", "Are you sure you want to proceed, your game may become unplayable if the process fails. All game data WILL be lost!", PromptType.Confirmation))
+                return false;
 
-            Logger.SetStatus("Uninstalling " + appId);
-            await DeviceManager.SendShellCommandAsync("pm uninstall -k " + appId);
-            Logger.SetStatus("Installing modded apk");
-            await DeviceManager.SendCommandAsync("install " + apkPath);
+            // const string RemoteTempAPKPath = FilePaths.RemoteLemonManagerDataDirectory + "/temp.apk";
+            // if (!await DeviceManager.RemoteDirectoryExists(FilePaths.RemoteLemonManagerDataDirectory))
+            // {
+            // Logger.SetStatus("Setting up directories");
+            //     await DeviceManager.SendShellCommandAsync("mkdir " + FilePaths.RemoteLemonManagerDataDirectory);
+            // }
+
+            Logger.SetStatus("Uninstalling " + appInfo.Id);
+            await DeviceManager.SendShellCommandAsync("pm uninstall " + appInfo.Id);
+
+            // Logger.SetStatus("Uploading Modded APK");
+            // await DeviceManager.Push(moddedAPKPath, RemoteTempAPKPath);
+
+            Logger.SetStatus("Installing Modded APK");
+            await DeviceManager.SendCommandAsync("install " + moddedAPKPath);
+
+            // Logger.SetStatus("Cleaning up");
+            // await DeviceManager.SendShellCommandAsync("rm " + RemoteTempAPKPath); // just incase
+
 
             await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Modded APK Installed", "You must run your game once before being able to install any lemons. The first time you run the game it may take sevral minutes to start.", PromptType.Notification);
+            return true;
         }
 
         private static AssetRipper.Primitives.UnityVersion GetVersion(string localApk)
         {
-            using ZipArchive archive = ZipFile.OpenRead(localApk);
-            /*string globalGameManagersPath = "/assets/bin/Data/globalgamemanagers";
-            bool gGMExists = archive.GetEntry(globalGameManagersPath) is object;
-            string assetFilePath = gGMExists ? globalGameManagersPath : "/assets/bin/Data/data.unity3d";
-
-            using Stream stream = archive.GetEntry(assetFilePath).Open();
-            byte[] versionBuffer = new byte[11];
-            stream.Read(versionBuffer, gGMExists ? 0x14 : 0x12, versionBuffer.Length);
-*/
-            return AssetRipper.Primitives.UnityVersion.Parse(ApplicationLocator.GetUnityVersion(archive));
-
-            /*string tempDir = Path.Combine(ApplicationLocator.GetLocalApplicationCache(appId), "supertempdir");
-            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
-            Directory.CreateDirectory(tempDir);
-            ZipFile.ExtractToDirectory(localAPKPath, tempDir, true);
-
-            string globalGameManagersPath = Path.GetFullPath(tempDir + "/assets/bin/Data/globalgamemanagers");
-            string assetFilePath = File.Exists(globalGameManagersPath) ? globalGameManagersPath : Path.GetFullPath(tempDir + "/assets/bin/Data/data.unity3d");
-
-            AssetRipper.Primitives.UnityVersion result = AssetRipper.Primitives.UnityVersion.MinVersion;
-            using (FileStream assetFileStream = File.OpenRead(assetFilePath))
+            try
             {
-                AssetsManager assetsManager = new AssetsManager();
-                var assetFile = assetsManager.LoadAssetsFile(assetFileStream, true);
-                result = AssetRipper.Primitives.UnityVersion.Parse(assetFile.file.Metadata.UnityVersion);
-                Logger.Log(result);
+                using ZipArchive archive = ZipFile.OpenRead(localApk);
+                return AssetRipper.Primitives.UnityVersion.Parse(ApplicationLocator.GetUnityVersion(archive));
             }
-            return result;*/
+            catch
+            {
+                return AssetRipper.Primitives.UnityVersion.MinVersion;
+            }
         }
 
         private static async Task<string> GetIL2CppEtc()
@@ -159,7 +160,7 @@ namespace LemonManager.ModManager
             }
         }
 
-        public class PatcherhLoggerImplimentation : IPatchLogger
+        public class PatcherLoggerImplimentation : IPatchLogger
         {
             void IPatchLogger.Log(string message)
             {

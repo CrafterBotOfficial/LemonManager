@@ -22,7 +22,7 @@
                 HorizontalAlignment="Center"
                 IsVisible="{Binding ShowLoadingView}">
       <TextBlock>Loading...</TextBlock>
-      <TextBlock Text="{Binding Status}"/>
+      <TextBlock Name="StatusText"/>
     </StackPanel>
 
     <!-- MelonLoader Initialization helper -->

@@ -38,7 +38,7 @@ public static class DeviceManager
         await SendCommandAsync($"push {localFile} {remoteFile}");
 
     public static async Task<bool> RemoteDirectoryExists(string remotePath) =>
-       (await SendShellCommandAsync($"if [ -e {remotePath} ]; then echo \"exists\"; else echo \"not exists\"; fi")) == "exists";
+            await SendShellCommandAsync($"cd \"{remotePath}\"") is string;
 
     public static string[] GetFiles(string remotePath)
     {

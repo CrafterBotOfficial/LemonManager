@@ -1,7 +1,9 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 using LemonManager.ModManager;
 using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
+using LemonManager.Views;
 using ReactiveUI;
 using System.ComponentModel;
 using System.IO;
@@ -32,7 +34,8 @@ namespace LemonManager.ViewModels
         {
             Instance = this;
             ChangeApplicationCommand = ReactiveCommand.Create(async () => await SelectApplication(true));
-            StartGameCommand = ReactiveCommand.Create(() => {
+            StartGameCommand = ReactiveCommand.Create(() =>
+            {
                 GameControlsView.Logcat();
                 GameControlsView.StartStopGame();
             });
@@ -63,6 +66,7 @@ namespace LemonManager.ViewModels
             UnityApplicationInfoModel? moddedInfo = null;
             while (moddedInfo is null || ((moddedInfo?.IsModded).HasValue && (!moddedInfo?.IsModded).Value))
             {
+                await Task.Delay(10);
                 if (apps.TryGetValue(AppSettings.Default.SelectedApplicationId, out var appInfo))
                 {
                     if (moddedInfo is null)
@@ -82,7 +86,8 @@ namespace LemonManager.ViewModels
                             AppSettings.Default.SelectedApplicationId = string.Empty;
                         else
                         {
-                            GamePatcherManager.PatchApp(moddedInfo);
+                            GamePatcherManager.IsPatching = true;
+                            Task.Run(async () => GamePatcherManager.PatchApp(moddedInfo));
                         }
                     }
                     continue;
@@ -93,18 +98,25 @@ namespace LemonManager.ViewModels
             ApplicationManager = new ApplicationManager(moddedInfo);
             if (!moddedInfo.MelonLoaderInitialized)
             {
-                IsLoading = false;
                 ShowMelonNotReady = true;
-                this.RaisePropertyChanged(nameof(IsLoading));
                 this.RaisePropertyChanged(nameof(ShowMelonNotReady));
-                return;
             }
+            else
+            {
+                PreferenceEditorView.Init(ApplicationManager.Info.Id);
+                AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
+                this.RaisePropertyChanged(nameof(AppIcon));
+                this.RaisePropertyChanged(nameof(HasIcon));
+                AppSettings.Default.Save();
+            }
+            IsLoading = false;
+            this.RaisePropertyChanged(nameof(ShowLemonManager));
 
-            PreferenceEditorView.Init(ApplicationManager.Info.Id);
-            AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
-            this.RaisePropertyChanged(nameof(AppIcon));
-            this.RaisePropertyChanged(nameof(HasIcon));
-            AppSettings.Default.Save();
+#if DEBUG
+            Logger.Log(ShowLoadingView);
+            Logger.Log(ShowMelonNotReady);
+            Logger.Log(ShowLemonManager);
+#endif
         }
 
         public static Bitmap ByteArrayToBitmap(byte[] byteArray)
@@ -116,15 +128,13 @@ namespace LemonManager.ViewModels
 
         #region Loading status
         public bool ShowLoadingView { get; set; } = true;
-        public string Status { get; set; }
+        private TextBlock loadingStatusTextBlock => MainWindow.Instance.GetControl<TextBlock>("StatusText");
         public static string LoadingStatus
         {
-            get => Instance.Status;
             set
             {
-                Instance.Status = value;
-                Instance.RaisePropertyChanged(nameof(Status));
                 IsLoading = true;
+                Instance.loadingStatusTextBlock.Text = value;
             }
         }
         public static bool IsLoading
@@ -136,6 +146,7 @@ namespace LemonManager.ViewModels
                 {
                     Instance.ShowLoadingView = value;
                     Instance.RaisePropertyChanged(nameof(ShowLoadingView));
+                    Instance.RaisePropertyChanged(nameof(ShowLemonManager));
                 }
             }
         }
