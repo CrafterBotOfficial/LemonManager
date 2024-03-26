@@ -74,31 +74,15 @@ namespace LemonManager.ModManager
         private static async Task InstallApk(string appId, string apkPath)
         {
             DeviceManager.SendShellCommand($"am force-stop {appId}"); // just incase its already running
-
-            bool isMetaQuest = DeviceManager.CurrentDevice.Model.StartsWith("Quest");
-            if (isMetaQuest)
-            {
-                DeviceManager.SendShellCommand($"am broadcast -a com.oculus.vrpowermanager.prox_close"); // prox_close
-            }
+            if (!await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Install Modded APK?", "Are you sure you want to proceed, your game may become unplayable if the process fails.", PromptType.Confirmation))
+                return;
 
             Logger.SetStatus("Uninstalling " + appId);
             await DeviceManager.SendShellCommandAsync("pm uninstall -k " + appId);
-            Logger.SetStatus("Installing modded " + appId);
+            Logger.SetStatus("Installing modded apk");
             await DeviceManager.SendCommandAsync("install " + apkPath);
 
-            Logger.SetStatus("Starting game, this may take a while.");
-            Process.Start(new ProcessStartInfo(Path.Combine(FilePaths.ApplicationDataPath, "platform-tools", "adb.exe"))
-            {
-                WorkingDirectory = Path.Combine(FilePaths.ApplicationDataPath, "platform-tools"),
-                Arguments = "logcat -v time MelonLoader:D CRASH:D Mono:D mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D funchook:D Unity:D Binder:D AndroidRuntime:D *:S" // https://github.com/LemonLoader/MelonLoader/wiki/Logging#realtime-logging
-            });
-            await DeviceManager.SendShellCommandAsync($"monkey -p " + appId);
-            DeviceManager.SendShellCommand("am force-stop " + appId);
-
-            if (isMetaQuest)
-            {
-                DeviceManager.SendShellCommand($"am broadcast -a com.oculus.vrpowermanager.automation_disable");
-            }
+            await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Modded APK Installed", "You must run your game once before being able to install any lemons. The first time you run the game it may take sevral minutes to start.", PromptType.Notification);
         }
 
         private static AssetRipper.Primitives.UnityVersion GetVersion(string localAPKPath, string appId)
