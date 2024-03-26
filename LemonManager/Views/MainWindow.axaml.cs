@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using LemonManager.ViewModels;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LemonManager.Views
 {
@@ -23,10 +24,9 @@ namespace LemonManager.Views
             if (files is object)
             {
                 var viewModel = ((MainWindowViewModel)DataContext);
-                // MainWindowViewModel.IsLoading = true;
-                foreach (IStorageItem item in files)
+                for (int i = 0; i < files.Count(); i++)
                 {
-                    await viewModel.ApplicationManager.InstallLemon(item.Path.LocalPath);
+                    await viewModel.ApplicationManager.InstallLemon(files.ElementAt(i).Path.LocalPath);
                 }
                 await viewModel.PopulateLemons();
                 MainWindowViewModel.IsLoading = false;

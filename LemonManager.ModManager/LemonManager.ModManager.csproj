@@ -5,7 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Iteedee.ApkReader" Version="1.0.1" />
+    <ProjectReference Include="../MelonLoaderInstaller/Core/MelonLoaderInstallerCore.csproj" />
   </ItemGroup>
 
 </Project>

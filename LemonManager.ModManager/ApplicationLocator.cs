@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -37,28 +38,18 @@ public static class ApplicationLocator
         return infos;
     }
 
-    /// <returns>Null if not modded</returns>
-    public static async Task<ModdedApplicationModel> GetModdedApplicationInfo(ApplicationInfo info)
+    /// <returns>Null if isn't Unity app</returns>
+    public static async Task<UnityApplicationInfoModel> GetModdedApplicationInfo(ApplicationInfo info)
     {
-        string localDirectory = Path.Combine(FilePaths.LemonCacheDirectory, info.Id);
+        string localDirectory = GetLocalApplicationCache(info.Id);
         if (!Directory.Exists(localDirectory)) Directory.CreateDirectory(localDirectory);
 
-        Logger.SetStatus("Comparing hashes");
-        string localAPK = Path.Combine(localDirectory, "base.apk.zip");
-        Stream localAPKReadStream = File.Exists(localAPK) ? File.OpenRead(localAPK) : null;
-
-        if (localAPKReadStream is null || !DeviceManager.CompareFileHashs(info.RemoteAPKPath, localAPK))
-        {
-            Logger.SetStatus("Downloading remote APK");
-            if (File.Exists(localAPK)) File.Delete(localAPK);
-            await DeviceManager.Pull(info.RemoteAPKPath, localAPK);
-            localAPKReadStream = File.OpenRead(localAPK);
-        }
+        string localAPK = await DownloadRemoteApplication(info);
 
         Logger.SetStatus("Parsing APK");
 
         using ZipArchive zipArchive = ZipFile.OpenRead(localAPK);
-        if (zipArchive.Entries.Any(entry => entry.Name == "MelonLoader.dll"))
+        if (zipArchive.Entries.Any(entry => entry.Name == "libunity.so"))
         {
             byte[] manifestBytes = GetBytes(zipArchive.GetEntry("AndroidManifest.xml"));
             byte[] resourcesBytes = GetBytes(zipArchive.GetEntry("resources.arsc"));
@@ -72,6 +63,9 @@ public static class ApplicationLocator
                 UnityVersion = GetUnityVersion(zipArchive) ?? "UNKNOWN",
                 Il2CppVersion = GetIL2CppVersion(zipArchive.GetEntry("assets/bin/Data/Managed/Metadata/global-metadata.dat")) ?? "UNKNOWN", // unkown if mono
 
+                IsModded = zipArchive.Entries.Any(entry => entry.Name == "MelonLoader.dll"),
+                MelonLoaderInitialized = await MelonLoaderInitialized(info.Id),
+
                 RemoteAPKPath = info.RemoteAPKPath,
                 LocalAPKPath = localAPK,
                 RemoteDataPath = $"/sdcard/Android/data/{info.Id}/files/",
@@ -79,32 +73,47 @@ public static class ApplicationLocator
                 Icon = apkInfo.hasIcon ? GetBytes(zipArchive.GetEntry(apkInfo.iconFileName[0])) : null
             };
         }
-        Logger.Log($"{info.Id} isn't modded");
+        Logger.Log($"{info.Id} isn't a Unity Application");
         return null;
     }
 
-    private static string GetUnityVersion(ZipArchive archive)
+    public static async Task<string> DownloadRemoteApplication(ApplicationInfo info)
+    {
+        Logger.SetStatus("Comparing hashes");
+        string localAPK = Path.Combine(GetLocalApplicationCache(info.Id), "base.apk.zip");
+
+        if (!File.Exists(localAPK) || !DeviceManager.CompareFileHashs(info.RemoteAPKPath, localAPK))
+        {
+            Logger.SetStatus("Downloading remote APK");
+            if (File.Exists(localAPK)) File.Delete(localAPK);
+            await DeviceManager.Pull(info.RemoteAPKPath, localAPK);
+        }
+        return localAPK;
+    }
+
+    public static string GetUnityVersion(ZipArchive archive)
     {
         try
         {
-            bool dataUnity3dExists = archive.Entries.Any(entry => entry.Name == "data.unity3d");
-            var entry = archive.GetEntry("assets/bin/Data/" + (dataUnity3dExists ? "data.unity3d" : "globalgamemanagers"));
+            string globalGameManagersPath = "assets/bin/Data/globalgamemanagers";
+            ZipArchiveEntry globalGameManagersEntry = archive.GetEntry(globalGameManagersPath);
+            var assetFileEntry = globalGameManagersEntry is object ? globalGameManagersEntry : archive.GetEntry("assets/bin/Data/data.unity3d");
 
-            Logger.Log("Extracting unity version");
-            using Stream stream = entry.Open();
+            using Stream stream = assetFileEntry.Open();
             using MemoryStream memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
 
-            memoryStream.Position = dataUnity3dExists ? 0x12 : 0x14;
-            using (BinaryReader reader = new BinaryReader(memoryStream))
-            {
-                string version = Encoding.Default.GetString(reader.ReadBytes(11));
-                Logger.Log("Detected Unity version " + version);
-                return version;
-            }
+            memoryStream.Position = globalGameManagersEntry is object ? 0x14 : 0x12;
+            byte[] versionBuffer = new byte[11];
+            memoryStream.Read(versionBuffer, 0, versionBuffer.Length);
+
+            string unityVersion = Encoding.UTF8.GetString(versionBuffer);
+            Logger.Log("Unity version from asset file: " + unityVersion);
+            return unityVersion;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Error(ex);
             return null;
         }
     }
@@ -131,6 +140,13 @@ public static class ApplicationLocator
         return versionNumber.ToString();
     }
 
+    private static async Task<bool> MelonLoaderInitialized(string appId)
+    {
+        string melonloaderPath = string.Format(FilePaths.RemoteApplicationDataPath, appId) + "/melonloader/";
+        Logger.Log("Checking remote directory for melonloader: " + melonloaderPath);
+        return await DeviceManager.RemoteDirectoryExists(melonloaderPath);
+    }
+
     private static byte[] GetBytes(ZipArchiveEntry entry)
     {
         using Stream stream = entry.Open();
@@ -138,6 +154,8 @@ public static class ApplicationLocator
         stream.Read(buffer, 0, buffer.Length);
         return buffer;
     }
+
+    public static string GetLocalApplicationCache(string appId) => Path.Combine(FilePaths.LemonCacheDirectory, appId);
 
     public struct ApplicationInfo
     {

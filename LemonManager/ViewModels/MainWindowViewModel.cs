@@ -1,7 +1,9 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 using LemonManager.ModManager;
 using LemonManager.ModManager.AndroidDebugBridge;
 using LemonManager.ModManager.Models;
+using LemonManager.Views;
 using ReactiveUI;
 using System.ComponentModel;
 using System.IO;
@@ -23,6 +25,9 @@ namespace LemonManager.ViewModels
         public PreferenceEditorViewModel PreferenceEditorView { get; } = new PreferenceEditorViewModel();
 
         public ICommand ChangeApplicationCommand { get; set; }
+        public ICommand StartGameCommand { get; set; }
+
+        public bool ShowStartGameButton { get; set; } = true;
 
         public bool HasIcon => AppIcon is object;
         public Bitmap AppIcon { get; set; }
@@ -31,6 +36,12 @@ namespace LemonManager.ViewModels
         {
             Instance = this;
             ChangeApplicationCommand = ReactiveCommand.Create(async () => await SelectApplication(true));
+            StartGameCommand = ReactiveCommand.Create(() =>
+            {
+                GameControlsView.Logcat();
+                GameControlsView.StartStopGame();
+                ShowStartGameButton = false;
+            });
             Task.Run(Init);
         }
 
@@ -55,27 +66,60 @@ namespace LemonManager.ViewModels
 
             if (forceNewSelection) AppSettings.Default.SelectedApplicationId = string.Empty;
 
-            ModdedApplicationModel moddedInfo = null;
-            while (moddedInfo is null)
+            UnityApplicationInfoModel? moddedInfo = null;
+            while (moddedInfo is null || ((moddedInfo?.IsModded).HasValue && (!moddedInfo?.IsModded).Value))
             {
+                await Task.Delay(10);
                 if (apps.TryGetValue(AppSettings.Default.SelectedApplicationId, out var appInfo))
                 {
-                    moddedInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
                     if (moddedInfo is null)
                     {
-                        AppSettings.Default.SelectedApplicationId = string.Empty;
-                        await PromptHandler.Instance.PromptUser("Game Isn't Modded", "The selected game isn't modded with LemonLoader. Please select a different game or patch this game with the LemonInstaller.", PromptType.Notification);
+                        moddedInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
+                        if (moddedInfo is null)
+                        {
+                            AppSettings.Default.SelectedApplicationId = string.Empty;
+                            await PromptHandler.Instance.PromptUser("Unrecognised Game", "The selected application doesn't appear to be a Unity game, please select another.", PromptType.Notification);
+                            continue;
+                        }
+                    }
+                    else
+                    if (!moddedInfo.IsModded && !ModManager.GamePatcherManager.IsPatching)
+                    {
+                        if (!await PromptHandler.Instance.PromptUser("Patch Game?", moddedInfo.Id + " isn't patched with LemonLoader, if you continue it will be patched.", PromptType.Confirmation))
+                            AppSettings.Default.SelectedApplicationId = string.Empty;
+                        else
+                        {
+                            GamePatcherManager.IsPatching = true;
+                            Task.Run(async () => GamePatcherManager.PatchApp(moddedInfo));
+                        }
                     }
                     continue;
                 }
                 AppSettings.Default.SelectedApplicationId = apps.ElementAt(await PromptHandler.Instance.PromptUser("Select a Application", apps.Select(app => app.Key).ToArray())).Key;
             }
+
             ApplicationManager = new ApplicationManager(moddedInfo);
-            PreferenceEditorView.Init(ApplicationManager.Info.Id);
-            AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
-            this.RaisePropertyChanged(nameof(AppIcon));
-            this.RaisePropertyChanged(nameof(HasIcon));
-            AppSettings.Default.Save();
+            if (!moddedInfo.MelonLoaderInitialized)
+            {
+                ShowMelonNotReady = true;
+                this.RaisePropertyChanged(nameof(ShowMelonNotReady));
+            }
+            else
+            {
+                PreferenceEditorView.Init(ApplicationManager.Info.Id);
+                AppIcon = ByteArrayToBitmap(ApplicationManager.Info.Icon) ?? null;
+                this.RaisePropertyChanged(nameof(AppIcon));
+                this.RaisePropertyChanged(nameof(HasIcon));
+                AppSettings.Default.Save();
+            }
+            IsLoading = false;
+            this.RaisePropertyChanged(nameof(ShowLemonManager));
+
+#if DEBUG
+            Logger.Log(ShowLoadingView);
+            Logger.Log(ShowMelonNotReady);
+            Logger.Log(ShowLemonManager);
+#endif
         }
 
         public static Bitmap ByteArrayToBitmap(byte[] byteArray)
@@ -87,15 +131,13 @@ namespace LemonManager.ViewModels
 
         #region Loading status
         public bool ShowLoadingView { get; set; } = true;
-        public string Status { get; set; }
+        private TextBlock loadingStatusTextBlock => MainWindow.Instance.GetControl<TextBlock>("StatusText");
         public static string LoadingStatus
         {
-            get => Instance.Status;
             set
             {
-                Instance.Status = value;
-                Instance.RaisePropertyChanged(nameof(Status));
                 IsLoading = true;
+                Instance.loadingStatusTextBlock.Text = value;
             }
         }
         public static bool IsLoading
@@ -107,9 +149,14 @@ namespace LemonManager.ViewModels
                 {
                     Instance.ShowLoadingView = value;
                     Instance.RaisePropertyChanged(nameof(ShowLoadingView));
+                    Instance.RaisePropertyChanged(nameof(ShowLemonManager));
                 }
             }
         }
+
         #endregion
+
+        public bool ShowMelonNotReady { get; set; }
+        public bool ShowLemonManager => !ShowMelonNotReady && !ShowLoadingView;
     }
 }

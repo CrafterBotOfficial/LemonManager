@@ -9,7 +9,7 @@ internal static class CommandExecuter
 
     public static string SendCommand(string command, int timeout = 6500) =>
         StartProcess(command, timeout);
-     
+
     public static async Task<string> SendCommandAsync(string command) =>
         await StartProcessAsync(command);
 
@@ -20,10 +20,13 @@ internal static class CommandExecuter
 
         string output = string.Empty;
 
-        process.OutputDataReceived += (sender, args) => output += args.Data + "\n";
+        process.OutputDataReceived += (sender, args) =>
+        {
+            output += args.Data + "\n";
+        };
 
         process.BeginOutputReadLine();
-        
+
         if (!process.WaitForExit(timeout)) process.Kill();
         if (process.ExitCode != 0)
             Logger.Error($"Error running adb {process.ExitCode} {process.StandardError.ReadToEnd()}");
@@ -36,13 +39,17 @@ internal static class CommandExecuter
         process.EnableRaisingEvents = true;
 
         string output = string.Empty;
-        process.OutputDataReceived += (sender, data) => output += data.Data + "\n";
+        process.OutputDataReceived += (sender, data) =>
+        {
+            output += data.Data + "\n";
+        };
         process.BeginOutputReadLine();
 
         await process.WaitForExitAsync();
         if (process.ExitCode != 0)
         {
             Logger.Warning($"Process crashed {process.ExitCode} {args} {process.StandardError.ReadToEnd()}");
+            return null;
         }
         return output;
     }

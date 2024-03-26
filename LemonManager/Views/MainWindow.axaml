@@ -17,14 +17,26 @@
 
   <Panel>
 
+    <!-- Loading panel -->
     <StackPanel VerticalAlignment="Center"
                 HorizontalAlignment="Center"
                 IsVisible="{Binding ShowLoadingView}">
       <TextBlock>Loading...</TextBlock>
-      <TextBlock Text="{Binding Status}"/>
+      <TextBlock Name="StatusText"/>
     </StackPanel>
 
-    <StackPanel Margin="20" IsVisible="{Binding !ShowLoadingView}">
+    <!-- MelonLoader Initialization helper -->
+    <StackPanel IsVisible="{Binding ShowMelonNotReady}"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBlock IsVisible="{Binding ShowStartGameButton}">This game hasn't been ran yet, therefor LemonLoader isn't ready yet.</TextBlock>
+      <TextBlock IsVisible="{Binding !ShowStartGameButton}">Game is starting, this may take awhile, but once its complete the game will be ready to use.</TextBlock>
+      <Button Command="{Binding StartGameCommand}"
+              IsVisible="{Binding ShowStartGameButton}">Start Game</Button>
+    </StackPanel>
+
+    <!-- Mod manager & utilities view holder -->
+    <StackPanel Margin="20"
+                IsVisible="{Binding ShowLemonManager}">
       <Panel>
         <TextBlock FontSize="30">LemonManager</TextBlock>
         <Image Height="45" Width="45"
