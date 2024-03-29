@@ -31,10 +31,10 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet publish ./LemonManager/LemonManager.csproj -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -c Release
+      run: dotnet publish ./LemonManager/LemonManager.csproj -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -c Release -p:platform=${{ runner.os }}
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{ runner.os }}-artifacts
-        path: ./LemonManager/bin/Release/net6.0/
+        path: ./LemonManager/bin/Release/net6.0/publish
