@@ -30,11 +30,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet publish ./LemonManager/LemonManager.csproj -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -c Release -p:platform=${{ runner.os }}
+    - name: Build and Publish
+      run: dotnet publish ./LemonManager/LemonManager.csproj -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -c Release -p:platform=${{ runner.os }} -r ${{ matrix.runtime }}
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{ runner.os }}-artifacts
-        path: ./LemonManager/bin/Release/net6.0/publish
+        path: ./LemonManager/bin/Release/net6.0/publish/${{ matrix.runtime }}
