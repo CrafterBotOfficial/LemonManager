@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -33,6 +32,11 @@ namespace LemonManager.ModManager
                 }
 
                 string id = match.Groups[2].Value;
+                if (infos.ContainsKey(id))
+                {
+                    Logger.Warning("Duplicate package found: " + id);
+                    continue;
+                }
                 infos.Add(id, new ApplicationInfo(match.Groups[1].Value + ".apk", id));
             }
             Logger.Log($"Found {infos.Count} packages");
@@ -40,7 +44,7 @@ namespace LemonManager.ModManager
         }
 
         /// <returns>Null if isn't Unity app</returns>
-        public static async Task<UnityApplicationInfoModel> GetModdedApplicationInfo(ApplicationInfo info)
+        public static async Task<UnityApplicationInfoModel> GetUnityApplicationInfo(ApplicationInfo info)
         {
             string localDirectory = GetLocalApplicationCache(info.Id);
             if (!Directory.Exists(localDirectory)) Directory.CreateDirectory(localDirectory);
@@ -56,7 +60,7 @@ namespace LemonManager.ModManager
                 byte[] resourcesBytes = GetBytes(zipArchive.GetEntry("resources.arsc"));
 
                 ApkInfo apkInfo = apkReader.extractInfo(manifestBytes, resourcesBytes); // really only extracting the apk version so it may not be worth it
-                return new()
+                return new UnityApplicationInfoModel()
                 {
                     Id = apkInfo.packageName,
 
@@ -144,8 +148,9 @@ namespace LemonManager.ModManager
         private static async Task<bool> MelonLoaderInitialized(string appId)
         {
             string melonloaderPath = string.Format(FilePaths.RemoteApplicationDataPath, appId) + "/melonloader/";
-            Logger.Log("Checking remote directory for melonloader: " + melonloaderPath);
-            return await DeviceManager.RemoteDirectoryExists(melonloaderPath);
+            bool exists = await DeviceManager.RemoteDirectoryExists(melonloaderPath);
+            Logger.Log($"Checked remote directory for melonloader: {melonloaderPath}\nresult:{exists}");
+            return exists;
         }
 
         private static byte[] GetBytes(ZipArchiveEntry entry)

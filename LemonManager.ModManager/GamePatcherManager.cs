@@ -38,7 +38,7 @@ namespace LemonManager.ModManager
 
                 CleanFiles(unityDependencyDirectory, outputApk, melonLoaderDependencyDirectory); // just incase the process failed mid way through and this is a retry
 
-                DownloadInstallerDependencies(melonLoaderDependencyDirectory);
+                await DownloadInstallerDependencies(melonLoaderDependencyDirectory);
 
                 instance = new Patcher(new PatchArguments()
                 {
@@ -106,11 +106,11 @@ namespace LemonManager.ModManager
             // await DeviceManager.Push(moddedAPKPath, RemoteTempAPKPath);
 
             Logger.SetStatus("Installing Modded APK");
-            await DeviceManager.SendCommandAsync("install " + moddedAPKPath);
-
-            // Logger.SetStatus("Cleaning up");
-            // await DeviceManager.SendShellCommandAsync("rm " + RemoteTempAPKPath); // just incase
-
+            if ((await DeviceManager.SendCommandAsync("install " + moddedAPKPath)) is not string)
+            {
+                await ServerManager.PromptHandler.PromptUser("Failed Installing Modded APK", "Couldn't install the modded apk, aborting.");
+                return false;
+            }
 
             await AndroidDebugBridge.ServerManager.PromptHandler.PromptUser("Modded APK Installed", "You must run your game once before being able to install any lemons. The first time you run the game it may take sevral minutes to start.", PromptType.Notification);
             return true;
@@ -140,13 +140,13 @@ namespace LemonManager.ModManager
             return outputFile;
         }
 
-        private static void DownloadInstallerDependencies(string outputFile)
+        private static async Task DownloadInstallerDependencies(string outputFile)
         {
             Logger.SetStatus("Downloading LemonLoader & dependencies");
             const string Url = "https://github.com/LemonLoader/MelonLoader/releases/download/0.2.0/installer_deps_0.2.0.zip";
             using WebClient webClient = new WebClient();
 
-            webClient.DownloadFile(Url, outputFile);
+            await webClient.DownloadFileTaskAsync(Url, outputFile);
             Logger.Log("Finished downloading!");
         }
 

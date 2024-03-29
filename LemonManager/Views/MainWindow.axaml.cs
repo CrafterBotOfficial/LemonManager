@@ -21,9 +21,9 @@ namespace LemonManager.Views
         public async void Drop(object sender, DragEventArgs e)
         {
             IEnumerable<IStorageItem>? files = e.Data.GetFiles();
-            if (files is object)
+            var viewModel = MainWindowViewModel.Instance;
+            if (files is object && viewModel is object && viewModel.ApplicationManager is object && viewModel.ApplicationManager.Info.MelonLoaderInitialized)
             {
-                var viewModel = ((MainWindowViewModel)DataContext);
                 for (int i = 0; i < files.Count(); i++)
                 {
                     await viewModel.ApplicationManager.InstallLemon(files.ElementAt(i).Path.LocalPath);

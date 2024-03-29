@@ -41,6 +41,7 @@ namespace LemonManager.ViewModels
                 GameControlsView.Logcat();
                 GameControlsView.StartStopGame();
                 ShowStartGameButton = false;
+                this.RaisePropertyChanged(nameof(ShowStartGameButton));
             });
             Task.Run(Init);
         }
@@ -55,8 +56,13 @@ namespace LemonManager.ViewModels
 
         public async Task PopulateLemons()
         {
-            await ModListView.PopulateLemons();
-            await PluginListView.PopulateLemons();
+            if (ApplicationManager.Info.MelonLoaderInitialized)
+            {
+                await ModListView.PopulateLemons();
+                await PluginListView.PopulateLemons();
+                return;
+            }
+            Logger.Warning("Couldn't fill lemon lists due to the game's ML not being initiliazed!");
         }
 
         public async Task SelectApplication(bool forceNewSelection)
@@ -74,7 +80,7 @@ namespace LemonManager.ViewModels
                 {
                     if (unityInfo is null)
                     {
-                        unityInfo = await ApplicationLocator.GetModdedApplicationInfo(appInfo);
+                        unityInfo = await ApplicationLocator.GetUnityApplicationInfo(appInfo);
                         if (unityInfo is null)
                         {
                             AppSettings.Default.SelectedApplicationId = string.Empty;
@@ -117,12 +123,6 @@ namespace LemonManager.ViewModels
             }
             IsLoading = false;
             this.RaisePropertyChanged(nameof(ShowLemonManager));
-
-#if DEBUG
-            Logger.Log(ShowLoadingView);
-            Logger.Log(ShowMelonNotReady);
-            Logger.Log(ShowLemonManager);
-#endif
         }
 
         public static Bitmap ByteArrayToBitmap(byte[] byteArray)
