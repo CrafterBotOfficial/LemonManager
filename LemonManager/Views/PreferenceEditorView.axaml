@@ -7,46 +7,28 @@
              x:Class="LemonManager.Views.PreferenceEditorView" x:DataType="vm:PreferenceEditorViewModel"
              Width="750" Height="425">
 
-  <Grid>
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                IsVisible="{Binding !FileExists}">
-      <TextBlock>File not found</TextBlock>
-    </StackPanel>
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                    IsVisible="{Binding !FileExists}">
+            <TextBlock>File not found</TextBlock>
+        </StackPanel>
 
-    <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
-                  IsVisible="{Binding FileExists}"
-                  Margin="50">
-      <ItemsRepeater ItemsSource="{Binding Entries}">
-        <ItemsRepeater.ItemTemplate>
-          <DataTemplate>
+        <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
+                      IsVisible="{Binding FileExists}"
+                      Margin="50">
+            <Panel>
+                <TextBox Text="{Binding Text}"/>
+            </Panel>
 
-            <StackPanel>
-              <TextBlock FontSize="15" Text="{Binding Name}"/>
-              <ItemsRepeater ItemsSource="{Binding Entries}">
-                <ItemsRepeater.ItemTemplate>
-                  <DataTemplate>
-                    <StackPanel>
-                      <TextBlock FontSize="15" Text="{Binding Name}"/>
-                      <TextBlock FontSize="15" Text="{Binding Description}"/>
-                      <TextBox Text="{Binding Value}"/>
-                    </StackPanel>
-                  </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-              </ItemsRepeater>
-            </StackPanel>
+        </ScrollViewer>
 
-          </DataTemplate>
-        </ItemsRepeater.ItemTemplate>
-      </ItemsRepeater>
-    </ScrollViewer>
-
-    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="30">
-      <Button IsVisible="{Binding FileExists}"
-              Command="{Binding SaveCommand}">Save</Button>
-      <Button IsVisible="{Binding FileExists}"
-              Command="{Binding DeleteFileCommand}">Delete</Button>
-      <Button Command="{Binding RefreshEntriesCommand}">Refresh</Button>
-    </StackPanel>
-  </Grid>
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="30">
+            <Button IsVisible="{Binding FileExists}"
+                    Command="{Binding SaveCommand}">Save</Button>
+            <Button IsVisible="{Binding FileExists}"
+                    Command="{Binding DeleteFileCommand}">Delete</Button>
+            <Button Command="{Binding RefreshEntriesCommand}">Refresh</Button>
+        </StackPanel>
+    </Grid>
 </UserControl>
